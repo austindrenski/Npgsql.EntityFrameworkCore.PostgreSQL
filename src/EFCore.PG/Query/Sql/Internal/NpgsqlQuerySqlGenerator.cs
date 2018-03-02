@@ -267,6 +267,19 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
             return iLikeExpression;
         }
 
+        public Expression VisitRangeContains(BinaryExpression rangeExpression)
+        {
+            Expression a = Visit(rangeExpression.Left);
+            Expression b = Visit(rangeExpression.Right);
+
+            sq
+
+            Sql.Append(" = ANY (");
+            Visit(arrayAnyExpression.Array);
+            Sql.Append(")");
+            return arrayAnyExpression;
+        }
+
         protected override string GenerateOperator(Expression expression)
         {
             switch (expression.NodeType)
