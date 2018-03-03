@@ -182,6 +182,14 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
             return arrayAnyExpression;
         }
 
+        public Expression VisitRangeContains(RangeContainsExpression rangeContainsExpression)
+        {
+            Visit(rangeContainsExpression.Range);
+            Sql.Append(" @> ");
+            Visit(rangeContainsExpression.Item);
+            return rangeContainsExpression;
+        }
+
         // PostgreSQL array indexing is 1-based. If the index happens to be a constant,
         // just increment it. Otherwise, append a +1 in the SQL.
         Expression GenerateOneBasedIndexExpression(Expression expression)
@@ -265,19 +273,6 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
             //_typeMapping = parentTypeMapping;
 
             return iLikeExpression;
-        }
-
-        public Expression VisitRangeContains(BinaryExpression rangeExpression)
-        {
-            Expression a = Visit(rangeExpression.Left);
-            Expression b = Visit(rangeExpression.Right);
-
-            sq
-
-            Sql.Append(" = ANY (");
-            Visit(arrayAnyExpression.Array);
-            Sql.Append(")");
-            return arrayAnyExpression;
         }
 
         protected override string GenerateOperator(Expression expression)

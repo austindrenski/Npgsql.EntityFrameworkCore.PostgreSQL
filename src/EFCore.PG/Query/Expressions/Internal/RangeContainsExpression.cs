@@ -24,7 +24,6 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Query.Sql.Internal;
@@ -36,76 +35,46 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
     /// Represents a PostgreSQL @> operator (e.g. [2018-03-01,2019-03-01] @> 2018-04-01)
     /// </summary>
     /// <remarks>
-    /// See https://www.postgresql.org/docs/current/static/functions-comparisons.html
+    /// See https://www.postgresql.org/docs/current/static/functions-range.html
     /// </remarks>
-    public class RangeContainsExpression : Expression
+    public class RangeContainsExpression : Expression, IEquatable<RangeContainsExpression>
     {
         /// <summary>
-        /// Creates a new instance of InExpression.
+        /// Gets the range.
         /// </summary>
-        /// <param name="operand">
-        /// The operand.
-        /// </param>
-        /// <param name="left">
-        /// The left-hand item.
-        /// </param>
-        /// <param name="right">
-        /// The right-hand item.
-        /// </param>
-        public RangeContainsExpression(
-            [NotNull] Expression operand,
-            [NotNull] Expression left,
-            [NotNull] Expression right)
-        {
-            Check.NotNull(operand, nameof(operand));
-            Check.NotNull(left, nameof(left));
-            Check.NotNull(right, nameof(right));
+        public virtual Expression Range { get; }
 
-            Operand = operand;
-            Left = left;
-            Right = right;
+        /// <summary>
+        /// Gets the item.
+        /// </summary>
+        public virtual Expression Item { get; }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="RangeContainsExpression"/>.
+        /// </summary>
+        /// <param name="range">
+        /// The range.
+        /// </param>
+        /// <param name="item">
+        /// The item.
+        /// </param>
+        public RangeContainsExpression([NotNull] Expression range, [NotNull] Expression item)
+        {
+            Check.NotNull(range, nameof(range));
+            Check.NotNull(item, nameof(item));
+
+            Range = range;
+            Item = item;
         }
 
-        /// <summary>
-        ///     Gets the operand.
-        /// </summary>
-        /// <value>
-        ///     The operand.
-        /// </value>
-        public virtual Expression Operand { get; }
+        /// <inheritdoc />
+        public override ExpressionType NodeType { get; } = ExpressionType.Extension;
 
-        /// <summary>
-        ///     Gets the array.
-        /// </summary>
-        /// <value>
-        ///     The array.
-        /// </value>
-        public virtual Expression Left { get; }
+        /// <inheritdoc />
+        public override Type Type { get; } = typeof(bool);
 
-        /// <summary>
-        ///     Gets the array.
-        /// </summary>
-        /// <value>
-        ///     The array.
-        /// </value>
-        public virtual Expression Right { get; }
-
-        /// <summary>
-        ///     Returns the node type of this <see cref="Expression" />. (Inherited from <see cref="Expression" />.)
-        /// </summary>
-        /// <returns>The <see cref="ExpressionType" /> that represents this expression.</returns>
-        public override ExpressionType NodeType => ExpressionType.Extension;
-
-        /// <summary>
-        ///     Gets the static type of the expression that this <see cref="Expression" /> represents. (Inherited from <see cref="Expression" />.)
-        /// </summary>
-        /// <returns>The <see cref="Type" /> that represents the static type of the expression.</returns>
-        public override Type Type => typeof(bool);
-
-        /// <summary>
-        ///     Dispatches to the specific visit method for this node type.
-        /// </summary>
-        protected override Expression Accept(ExpressionVisitor visitor)
+        /// <inheritdoc />
+        protected override Expression Accept([NotNull] ExpressionVisitor visitor)
         {
             Check.NotNull(visitor, nameof(visitor));
 
@@ -114,37 +83,43 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
                 : base.Accept(visitor);
         }
 
-        /// <summary>
-        ///     Reduces the node and then calls the <see cref="ExpressionVisitor.Visit(System.Linq.Expressions.Expression)" /> method passing the
-        ///     reduced expression.
-        ///     Throws an exception if the node isn't reducible.
-        /// </summary>
-        /// <param name="visitor"> An instance of <see cref="ExpressionVisitor" />. </param>
-        /// <returns> The expression being visited, or an expression which should replace it in the tree. </returns>
-        /// <remarks>
-        ///     Override this method to provide logic to walk the node's children.
-        ///     A typical implementation will call visitor.Visit on each of its
-        ///     children, and if any of them change, should return a new copy of
-        ///     itself with the modified children.
-        /// </remarks>
-        ///
+        /// <inheritdoc />
         protected override Expression VisitChildren(ExpressionVisitor visitor)
         {
-            var newOperand = visitor.Visit(Operand);
-            var newArray = visitor.Visit(Array);
+            Expression newRange = visitor.Visit(Range);
+            Expression newItem = visitor.Visit(Item);
 
-            return newOperand != Operand || newArray != Array
-                ? new RangeContainsExpression(newOperand, newArray)
-                : this;
+            return
+                Range == newRange && Item == newItem
+                    ? this
+                    : new RangeContainsExpression(newRange, newItem);
         }
 
-        /// <summary>
-        ///     Tests if this object is considered equal to another.
-        /// </summary>
-        /// <param name="obj"> The object to compare with the current object. </param>
-        /// <returns>
-        ///     true if the objects are considered equal, false if they are not.
-        /// </returns>
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{Range} @> {Item}";
+        }
+
+        public bool Equals(RangeContainsExpression other)
+        {
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return Equals(Range, other.Range) &&
+                   Equals(Item, other.Item) &&
+                   NodeType == other.NodeType &&
+                   Type == other.Type;
+        }
+
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -157,30 +132,20 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
                 return true;
             }
 
-            return obj.GetType() == GetType() && Equals((RangeContainsExpression)obj);
+            return GetType() == obj.GetType() && Equals((RangeContainsExpression)obj);
         }
 
-        bool Equals(RangeContainsExpression other)
-            => Operand.Equals(other.Operand) && Array.Equals(other.Array);
-
-        /// <summary>
-        ///     Returns a hash code for this object.
-        /// </summary>
-        /// <returns>
-        ///     A hash code for this object.
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
             {
-                return (Operand.GetHashCode() * 397) ^ Array.GetHashCode();
+                int hashCode = Range?.GetHashCode() ?? 0;
+                hashCode = (hashCode * 397) ^ (Item?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (int)NodeType;
+                hashCode = (hashCode * 397) ^ (Type?.GetHashCode() ?? 0);
+                return hashCode;
             }
         }
-
-        /// <summary>
-        ///     Creates a <see cref="string" /> representation of the Expression.
-        /// </summary>
-        /// <returns>A <see cref="string" /> representation of the Expression.</returns>
-        public override string ToString() => $"{Operand} = ANY ({Array})";
     }
 }
