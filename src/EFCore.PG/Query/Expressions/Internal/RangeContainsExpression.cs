@@ -39,6 +39,12 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
     /// </remarks>
     public class RangeContainsExpression : Expression, IEquatable<RangeContainsExpression>
     {
+        /// <inheritdoc />
+        public override ExpressionType NodeType { get; } = ExpressionType.Extension;
+
+        /// <inheritdoc />
+        public override Type Type { get; } = typeof(bool);
+
         /// <summary>
         /// Gets the range.
         /// </summary>
@@ -66,12 +72,6 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             Range = range;
             Item = item;
         }
-
-        /// <inheritdoc />
-        public override ExpressionType NodeType { get; } = ExpressionType.Extension;
-
-        /// <inheritdoc />
-        public override Type Type { get; } = typeof(bool);
 
         /// <inheritdoc />
         protected override Expression Accept([NotNull] ExpressionVisitor visitor)
