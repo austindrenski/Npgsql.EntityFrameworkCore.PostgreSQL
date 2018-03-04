@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using NpgsqlTypes;
 
 namespace Microsoft.EntityFrameworkCore
@@ -35,20 +36,21 @@ namespace Microsoft.EntityFrameworkCore
     public static class NpgsqlRangeFunctionExtensions
     {
         /// <summary>
-        ///
+        /// Determines whether a range contains a specified value.
         /// </summary>
         /// <param name="range">
-        ///
+        /// The range in which to locate the value.
         /// </param>
         /// <param name="value">
-        ///
+        /// The value to locate in the range.
         /// </param>
         /// <typeparam name="T">
-        ///
+        /// The type of the elements of <paramref name="range"/>.
         /// </typeparam>
         /// <returns>
-        ///
+        /// <value>true</value> if the range contains the specified value; otherwise, <value>false</value>.
         /// </returns>
+        [Pure]
         public static bool Contains<T>(this NpgsqlRange<T> range, T value) where T : IComparable<T>
         {
             if (range.IsEmpty)
@@ -72,20 +74,21 @@ namespace Microsoft.EntityFrameworkCore
         }
 
         /// <summary>
-        ///
+        /// Determines whether a range contains a specified range.
         /// </summary>
         /// <param name="range">
-        ///
+        /// The range in which to locate the specified range.
         /// </param>
         /// <param name="value">
-        ///
+        /// The specified range to locate in the range.
         /// </param>
         /// <typeparam name="T">
-        ///
+        /// The type of the elements of <paramref name="range"/>.
         /// </typeparam>
         /// <returns>
-        ///
+        /// <value>true</value> if the range contains the specified range; otherwise, <value>false</value>.
         /// </returns>
+        [Pure]
         public static bool Contains<T>(this NpgsqlRange<T> range, NpgsqlRange<T> value) where T : IComparable<T>
         {
             if (range.IsEmpty || value.IsEmpty)
@@ -109,43 +112,45 @@ namespace Microsoft.EntityFrameworkCore
         }
 
         /// <summary>
-        ///
+        /// Determines whether a value is contained by a specified range.
         /// </summary>
-        /// <param name="value">
-        ///
-        /// </param>
         /// <param name="range">
-        ///
+        /// The range in which to locate the value.
+        /// </param>
+        /// <param name="value">
+        /// The value to locate in the range.
         /// </param>
         /// <typeparam name="T">
-        ///
+        /// The type of the elements of <paramref name="range"/>.
         /// </typeparam>
         /// <returns>
-        ///
+        /// <value>true</value> if the range contains the specified value; otherwise, <value>false</value>.
         /// </returns>
+        [Pure]
         public static bool ContainedBy<T>(this T value, NpgsqlRange<T> range) where T : IComparable<T>
         {
             return range.Contains(value);
         }
 
         /// <summary>
-        ///
+        /// Determines whether a range is contained by a specified range.
         /// </summary>
-        /// <param name="value">
-        ///
-        /// </param>
         /// <param name="range">
-        ///
+        /// The range in which to locate the specified range.
+        /// </param>
+        /// <param name="value">
+        /// The specified range to locate in the range.
         /// </param>
         /// <typeparam name="T">
-        ///
+        /// The type of the elements of <paramref name="range"/>.
         /// </typeparam>
         /// <returns>
-        ///
+        /// <value>true</value> if the range contains the specified range; otherwise, <value>false</value>.
         /// </returns>
+        [Pure]
         public static bool ContainedBy<T>(this NpgsqlRange<T> value, NpgsqlRange<T> range) where T : IComparable<T>
         {
-            throw new NotImplementedException();
+            return range.Contains(value);
         }
     }
 }
