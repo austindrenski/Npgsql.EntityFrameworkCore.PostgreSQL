@@ -74,6 +74,43 @@ namespace Microsoft.EntityFrameworkCore
         /// <summary>
         ///
         /// </summary>
+        /// <param name="range">
+        ///
+        /// </param>
+        /// <param name="value">
+        ///
+        /// </param>
+        /// <typeparam name="T">
+        ///
+        /// </typeparam>
+        /// <returns>
+        ///
+        /// </returns>
+        public static bool Contains<T>(this NpgsqlRange<T> range, NpgsqlRange<T> value) where T : IComparable<T>
+        {
+            if (range.IsEmpty || value.IsEmpty)
+            {
+                return false;
+            }
+
+            if (range.LowerBoundInfinite && range.UpperBoundInfinite || value.LowerBoundInfinite && range.UpperBoundInfinite)
+            {
+                return true;
+            }
+
+            Comparer<T> comparer = Comparer<T>.Default;
+            int compareLower = comparer.Compare(value.LowerBound, range.LowerBound);
+            int compareUpper = comparer.Compare(value.UpperBound, range.UpperBound);
+
+            bool testLower = compareLower > 0 || compareLower == 0 && range.LowerBoundIsInclusive;
+            bool testUpper = compareUpper > 0 || compareUpper == 0 && range.UpperBoundIsInclusive;
+
+            return testLower || testUpper;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
         /// <param name="value">
         ///
         /// </param>
@@ -89,6 +126,26 @@ namespace Microsoft.EntityFrameworkCore
         public static bool ContainedBy<T>(this T value, NpgsqlRange<T> range) where T : IComparable<T>
         {
             return range.Contains(value);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="value">
+        ///
+        /// </param>
+        /// <param name="range">
+        ///
+        /// </param>
+        /// <typeparam name="T">
+        ///
+        /// </typeparam>
+        /// <returns>
+        ///
+        /// </returns>
+        public static bool ContainedBy<T>(this NpgsqlRange<T> value, NpgsqlRange<T> range) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -160,29 +160,5 @@ namespace Microsoft.EntityFrameworkCore
                 RegexOptions.IgnoreCase | RegexOptions.Singleline,
                 _regexTimeout);
         }
-
-        // TODO: document DbFunctions extension.
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="_">
-        ///
-        /// </param>
-        /// <param name="range">
-        ///
-        /// </param>
-        /// <param name="value">
-        ///
-        /// </param>
-        /// <typeparam name="T">
-        ///
-        /// </typeparam>
-        /// <returns>
-        ///
-        /// </returns>
-        public static bool Contains<T>([CanBeNull] this DbFunctions _, NpgsqlRange<T> range, T value) where T : IComparable<T>
-        {
-            return range.Contains(value);
-        }
     }
 }
