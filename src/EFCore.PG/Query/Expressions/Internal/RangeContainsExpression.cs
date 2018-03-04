@@ -101,6 +101,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             return $"{Range} @> {Item}";
         }
 
+        /// <inheritdoc />
         public bool Equals(RangeContainsExpression other)
         {
             if (ReferenceEquals(null, other))
@@ -113,10 +114,11 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
                 return true;
             }
 
-            return Equals(Range, other.Range) &&
-                   Equals(Item, other.Item) &&
-                   NodeType == other.NodeType &&
-                   Type == other.Type;
+            return
+                Equals(Range, other.Range) &&
+                Equals(Item, other.Item) &&
+                NodeType == other.NodeType &&
+                Type == other.Type;
         }
 
         /// <inheritdoc />

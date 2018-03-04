@@ -29,8 +29,26 @@ using NpgsqlTypes;
 
 namespace Microsoft.EntityFrameworkCore
 {
+    /// <summary>
+    /// Provides extension methods for <see cref="NpgsqlRange{T}"/> supporting PostgreSQL translation.
+    /// </summary>
     public static class NpgsqlRangeFunctionExtensions
     {
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="range">
+        ///
+        /// </param>
+        /// <param name="value">
+        ///
+        /// </param>
+        /// <typeparam name="T">
+        ///
+        /// </typeparam>
+        /// <returns>
+        ///
+        /// </returns>
         public static bool Contains<T>(this NpgsqlRange<T> range, T value) where T : IComparable<T>
         {
             if (range.IsEmpty)
@@ -51,6 +69,26 @@ namespace Microsoft.EntityFrameworkCore
             bool testUpper = compareUpper > 0 || compareUpper == 0 && range.UpperBoundIsInclusive;
 
             return testLower || testUpper;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="value">
+        ///
+        /// </param>
+        /// <param name="range">
+        ///
+        /// </param>
+        /// <typeparam name="T">
+        ///
+        /// </typeparam>
+        /// <returns>
+        ///
+        /// </returns>
+        public static bool ContainedBy<T>(this T value, NpgsqlRange<T> range) where T : IComparable<T>
+        {
+            return range.Contains(value);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' != 'Windows_NT' OR '$(CoreOnly)' == 'True'">netcoreapp2.0</TargetFrameworks>
@@ -9,7 +8,6 @@
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
   </PropertyGroup>
-
   <ItemGroup>
     <None Update="Northwind.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -18,11 +16,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\EFCore.PG\EFCore.PG.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.1.0-preview2-30183" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.1.0-preview2-30183" />
@@ -30,5 +26,4 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.0-preview2-30183" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.1.0-preview2-30183" />
   </ItemGroup>
-
 </Project>
