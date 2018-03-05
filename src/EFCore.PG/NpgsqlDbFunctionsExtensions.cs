@@ -27,7 +27,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
-using NpgsqlTypes;
 
 namespace Microsoft.EntityFrameworkCore
 {

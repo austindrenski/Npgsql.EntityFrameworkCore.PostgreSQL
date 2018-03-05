@@ -43,7 +43,8 @@ namespace Microsoft.EntityFrameworkCore.Storage
                 mapping.GenerateSqlLiteral(new DateTime(1997, 12, 17, 7, 37, 16, DateTimeKind.Unspecified)));
 
             var offset = TimeZoneInfo.Local.BaseUtcOffset.Hours;
-            Assert.StartsWith($"TIMESTAMPTZ '1997-12-17 07:37:16{offset:+00;-00}",
+            var offsetStr = offset < 10 ? $"0{offset}" : offset.ToString();
+            Assert.StartsWith($"TIMESTAMPTZ '1997-12-17 07:37:16+{offsetStr}",
                 mapping.GenerateSqlLiteral(new DateTime(1997, 12, 17, 7, 37, 16, DateTimeKind.Local)));
 
             Assert.Equal("TIMESTAMPTZ '1997-12-17 07:37:16.345 UTC'",
