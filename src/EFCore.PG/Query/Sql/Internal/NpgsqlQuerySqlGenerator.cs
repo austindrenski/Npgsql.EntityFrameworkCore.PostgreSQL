@@ -1,5 +1,4 @@
 ﻿#region License
-
 // The PostgreSQL License
 //
 // Copyright (C) 2016 The Npgsql Development Team
@@ -20,11 +19,9 @@
 // AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
 // ON AN "AS IS" BASIS, AND THE NPGSQL DEVELOPMENT TEAM HAS NO OBLIGATIONS
 // TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
-
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
@@ -70,15 +67,11 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
 
             if (selectExpression.Offset != null)
             {
-                if (selectExpression.Limit == null)
-                {
+                if (selectExpression.Limit == null) {
                     Sql.AppendLine();
-                }
-                else
-                {
+                } else {
                     Sql.Append(' ');
                 }
-
                 Sql.Append("OFFSET ");
                 Visit(selectExpression.Offset);
             }
@@ -145,7 +138,6 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
                     Sql.Append(")");
                     return exp;
                 }
-
                 break;
             }
 
@@ -176,7 +168,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
             {
                 // bytea cannot be subscripted, but there's get_byte
                 VisitSqlFunction(new SqlFunctionExpression("get_byte", typeof(byte),
-                                                           new[] { expression.Left, expression.Right }));
+                    new[] { expression.Left, expression.Right }));
                 return;
             }
 
@@ -186,7 +178,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
                 // PostgreSQL substr() is 1-based.
 
                 VisitSqlFunction(new SqlFunctionExpression("substr", typeof(char),
-                                                           new[] { expression.Left, expression.Right, Expression.Constant(1) }));
+                    new[] { expression.Left, expression.Right, Expression.Constant(1) }));
                 return;
             }
 
@@ -247,17 +239,14 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
             }
 
             Sql.Append("('(?");
-            if (options.HasFlag(RegexOptions.IgnoreCase))
-            {
+            if (options.HasFlag(RegexOptions.IgnoreCase)) {
                 Sql.Append('i');
             }
 
-            if (options.HasFlag(RegexOptions.Multiline))
-            {
+            if (options.HasFlag(RegexOptions.Multiline)) {
                 Sql.Append('n');
             }
-            else if (!options.HasFlag(RegexOptions.Singleline))
-            {
+            else if (!options.HasFlag(RegexOptions.Singleline)) {
                 // In .NET's default mode, . doesn't match newlines but PostgreSQL it does.
                 Sql.Append('p');
             }

@@ -12,7 +12,7 @@ namespace Microsoft.EntityFrameworkCore.Query
         /// <summary>
         /// Provides resources for unit tests.
         /// </summary>
-        private RangeQueryNpgsqlFixture Fixture { get; }
+        RangeQueryNpgsqlFixture Fixture { get; }
 
         /// <summary>
         /// Initializes resources for unit tests.
