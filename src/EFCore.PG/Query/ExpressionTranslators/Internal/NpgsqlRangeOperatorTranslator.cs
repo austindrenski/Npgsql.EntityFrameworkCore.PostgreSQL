@@ -138,7 +138,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
 
             if (generic == ValueContainedByRange || generic == RangeContainedByRange)
             {
-                return new RangeOperatorExpression(methodCallExpression.Arguments[1], methodCallExpression.Arguments[0], RangeOperatorExpression.OperatorType.ContainedBy);
+                return new RangeOperatorExpression(methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], RangeOperatorExpression.OperatorType.ContainedBy);
             }
 
             if (generic == RangeOverlaps)

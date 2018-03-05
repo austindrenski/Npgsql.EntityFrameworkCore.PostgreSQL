@@ -40,7 +40,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .ToArray();
 
                 Assert.Equal(3, actual.Length);
-                Assert.Contains("WHERE \"x\".\"Range\" @> '[0,5]'::int4range = TRUE", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE '[0,5]'::int4range <@ \"x\".\"Range\" = TRUE", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -76,7 +76,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .ToArray();
 
                 Assert.Equal(1, actual.Length);
-                Assert.Contains("WHERE NOT (\"x\".\"Range\" @> '[0,5]'::int4range = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE NOT ('[0,5]'::int4range <@ \"x\".\"Range\" = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -112,7 +112,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .ToArray();
 
                 Assert.Equal(3, actual.Length);
-                Assert.Contains("WHERE \"x\".\"Range\" @> 0", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE 0 <@ \"x\".\"Range\"", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -148,7 +148,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .ToArray();
 
                 Assert.Equal(1, actual.Length);
-                Assert.Contains("WHERE NOT (\"x\".\"Range\" @> 0 = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE NOT (0 <@ \"x\".\"Range\" = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 

@@ -189,32 +189,20 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
             return arrayAnyExpression;
         }
 
-        public Expression VisitRangeContains(RangeOperatorExpression rangeOperatorExpression)
+        /// <summary>
+        /// Visits a <see cref="RangeOperatorExpression"/> and generates the operator symbols.
+        /// </summary>
+        /// <param name="rangeOperatorExpression">
+        /// The expression to visit.
+        /// </param>
+        /// <returns>
+        /// The visited expression.
+        /// </returns>
+        public Expression VisitRangeOperator(RangeOperatorExpression rangeOperatorExpression)
         {
-            Visit(rangeOperatorExpression.Range);
-            switch (rangeOperatorExpression.Operator)
-            {
-            case RangeOperatorExpression.OperatorType.Contains:
-            {
-                Sql.Append(" @> ");
-                break;
-            }
-            case RangeOperatorExpression.OperatorType.ContainedBy:
-            {
-                Sql.Append(" @> ");
-                break;
-            }
-            case RangeOperatorExpression.OperatorType.Overlaps:
-            {
-                Sql.Append(" && ");
-                break;
-            }
-            default:
-            {
-                throw new NotSupportedException($"Range operator '{rangeOperatorExpression.Operator}' is not supported.");
-            }
-            }
-            Visit(rangeOperatorExpression.Item);
+            Visit(rangeOperatorExpression.Left);
+            Sql.Append($" {rangeOperatorExpression.OperatorSymbol} ");
+            Visit(rangeOperatorExpression.Right);
             return rangeOperatorExpression;
         }
 

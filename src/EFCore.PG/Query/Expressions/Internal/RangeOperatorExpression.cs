@@ -32,7 +32,7 @@ using Microsoft.EntityFrameworkCore.Utilities;
 namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
 {
     /// <summary>
-    /// Represents a PostgreSQL @> operator (e.g. [2018-03-01,2019-03-01] @> 2018-04-01)
+    /// Represents a PostgreSQL range operator.
     /// </summary>
     /// <remarks>
     /// See https://www.postgresql.org/docs/current/static/functions-range.html
@@ -46,36 +46,44 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         public override Type Type { get; } = typeof(bool);
 
         /// <summary>
-        /// Gets the range.
+        /// Gets the item to the left of the operator.
         /// </summary>
-        public virtual Expression Range { get; }
+        public virtual Expression Left { get; }
 
         /// <summary>
-        /// Gets the item.
+        /// Gets the item to the right of the operator.
         /// </summary>
-        public virtual Expression Item { get; }
+        public virtual Expression Right { get; }
 
+        /// <summary>
+        /// The operator.
+        /// </summary>
         public virtual OperatorType Operator { get; }
+
+        /// <summary>
+        /// The operator symbol.
+        /// </summary>
+        public virtual string OperatorSymbol => OperatorString(Operator);
 
         /// <summary>
         /// Creates a new instance of <see cref="RangeOperatorExpression"/>.
         /// </summary>
-        /// <param name="range">
-        /// The range.
+        /// <param name="left">
+        /// The item to the left of the operator.
         /// </param>
-        /// <param name="item">
-        /// The item.
+        /// <param name="right">
+        /// The item to the right of the operator.
         /// </param>
         /// <param name="operatorType">
         /// The type of range operation.
         /// </param>
-        public RangeOperatorExpression([NotNull] Expression range, [NotNull] Expression item, OperatorType operatorType)
+        public RangeOperatorExpression([NotNull] Expression left, [NotNull] Expression right, OperatorType operatorType)
         {
-            Check.NotNull(range, nameof(range));
-            Check.NotNull(item, nameof(item));
+            Check.NotNull(left, nameof(left));
+            Check.NotNull(right, nameof(right));
 
-            Range = range;
-            Item = item;
+            Left = left;
+            Right = right;
             Operator = operatorType;
         }
 
@@ -85,18 +93,18 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             Check.NotNull(visitor, nameof(visitor));
 
             return visitor is NpgsqlQuerySqlGenerator npsgqlGenerator
-                ? npsgqlGenerator.VisitRangeContains(this)
+                ? npsgqlGenerator.VisitRangeOperator(this)
                 : base.Accept(visitor);
         }
 
         /// <inheritdoc />
         protected override Expression VisitChildren(ExpressionVisitor visitor)
         {
-            Expression newRange = visitor.Visit(Range);
-            Expression newItem = visitor.Visit(Item);
+            Expression newRange = visitor.Visit(Left);
+            Expression newItem = visitor.Visit(Right);
 
             return
-                Range == newRange && Item == newItem
+                Left == newRange && Right == newItem
                     ? this
                     : new RangeOperatorExpression(newRange, newItem, Operator);
         }
@@ -104,7 +112,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Range} @> {Item}";
+            return $"{Left} {OperatorSymbol} {Right}";
         }
 
         /// <inheritdoc />
@@ -121,9 +129,10 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             }
 
             return
-                Equals(Range, other.Range) &&
-                Equals(Item, other.Item) &&
+                Equals(Left, other.Left) &&
+                Equals(Right, other.Right) &&
                 NodeType == other.NodeType &&
+                Operator == other.Operator &&
                 Type == other.Type;
         }
 
@@ -148,18 +157,63 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         {
             unchecked
             {
-                int hashCode = Range?.GetHashCode() ?? 0;
-                hashCode = (hashCode * 397) ^ (Item?.GetHashCode() ?? 0);
+                int hashCode = Left?.GetHashCode() ?? 0;
+                hashCode = (hashCode * 397) ^ (Right?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (int)NodeType;
+                hashCode = (hashCode * 397) ^ (int)Operator;
                 hashCode = (hashCode * 397) ^ (Type?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }
 
+        /// <summary>
+        /// Translates the <see cref="OperatorType"/> into a PostgreSQL operator symbol.
+        /// </summary>
+        /// <returns>
+        /// The PostgreSQL operator symbol.
+        /// </returns>
+        /// <exception cref="NotSupportedException" />
+        private static string OperatorString(OperatorType operatorType)
+        {
+            switch (operatorType)
+            {
+            case OperatorType.ContainedBy:
+            {
+                return "<@";
+            }
+            case OperatorType.Contains:
+            {
+                return "@>";
+            }
+            case OperatorType.Overlaps:
+            {
+                return "&&";
+            }
+            default:
+            {
+                throw new NotSupportedException($"Range operator '{operatorType}' is not supported.");
+            }
+            }
+        }
+
+        /// <summary>
+        /// Describes the operator type of a range expression.
+        /// </summary>
         public enum OperatorType
         {
+            /// <summary>
+            /// The &lt;@ operator.
+            /// </summary>
             ContainedBy,
+
+            /// <summary>
+            /// The @> operator.
+            /// </summary>
             Contains,
+
+            /// <summary>
+            /// The && operator.
+            /// </summary>
             Overlaps
         }
     }
