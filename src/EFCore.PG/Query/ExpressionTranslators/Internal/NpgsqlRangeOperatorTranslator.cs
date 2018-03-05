@@ -102,6 +102,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
         /// </summary>
         static NpgsqlRangeOperatorTranslator()
         {
+            // TODO: this is over-complicated -- give it another look
             MethodInfo[] extensions =
                 typeof(NpgsqlRangeExtensions)
                     .GetMethods()

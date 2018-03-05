@@ -30,6 +30,7 @@ using NpgsqlTypes;
 
 namespace Microsoft.EntityFrameworkCore
 {
+    // TODO: these implementations are buggy. fix.
     /// <summary>
     /// Provides extension methods for <see cref="NpgsqlRange{T}"/> supporting PostgreSQL translation.
     /// </summary>
