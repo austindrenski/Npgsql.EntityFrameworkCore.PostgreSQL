@@ -55,12 +55,12 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.IsStrictlyLeftOf{T}"/>.
         /// </summary>
-        static readonly MethodInfo StrictlyLeftOf;
+        static readonly MethodInfo IsStrictlyLeftOf;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.IsStrictlyRightOf{T}"/>.
         /// </summary>
-        static readonly MethodInfo StrictlyRightOf;
+        static readonly MethodInfo IsStrictlyRightOf;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.DoesNotExtendToTheLeftOf{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
@@ -75,7 +75,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.IsAdjacentTo{T}"/>.
         /// </summary>
-        static readonly MethodInfo Adjacent;
+        static readonly MethodInfo IsAdjacentTo;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Overlaps{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
@@ -146,15 +146,15 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
                                    .SequenceEqual(new Type[] { typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>) }))
                           .GetGenericMethodDefinition();
 
-            StrictlyLeftOf = null;
+            IsStrictlyLeftOf = null;
 
-            StrictlyRightOf = null;
+            IsStrictlyRightOf = null;
 
             DoesNotExtendToTheLeftOf = null;
 
             DoesNotExtendToTheRightOf = null;
 
-            Adjacent = null;
+            IsAdjacentTo = null;
 
             Union = null;
 
@@ -169,32 +169,26 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
             if (!methodCallExpression.Method.IsGenericMethod)
                 return null;
 
-            if (methodCallExpression.Method.Name == "Equals")
-                return
-                    new RangeOperatorExpression(
-                        methodCallExpression.Arguments[0],
-                        methodCallExpression.Arguments[1],
-                        RangeOperatorExpression.OperatorType.Equal);
-
             RangeOperatorExpression.OperatorType operatorType = RangeOperatorExpression.OperatorType.None;
 
             MethodInfo generic = methodCallExpression.Method.GetGenericMethodDefinition();
 
+            // TODO: is there a reason to use Equals(...) over == ? Check on what the EF Core team does.
             if (generic == ContainsValue || generic == ContainsRange)
                 operatorType = RangeOperatorExpression.OperatorType.Contains;
             else if (generic == RangeContainedBy)
                 operatorType = RangeOperatorExpression.OperatorType.ContainedBy;
             else if (generic == Overlaps)
                 operatorType = RangeOperatorExpression.OperatorType.Overlaps;
-            else if (generic == StrictlyLeftOf)
+            else if (generic == IsStrictlyLeftOf)
                 operatorType = RangeOperatorExpression.OperatorType.StrictlyLeftOf;
-            else if (generic == StrictlyRightOf)
+            else if (generic == IsStrictlyRightOf)
                 operatorType = RangeOperatorExpression.OperatorType.StrictlyRightOf;
             else if (generic == DoesNotExtendToTheLeftOf)
                 operatorType = RangeOperatorExpression.OperatorType.DoesNotExtendToTheLeftOf;
             else if (generic == DoesNotExtendToTheRightOf)
                 operatorType = RangeOperatorExpression.OperatorType.DoesNotExtendToTheRightOf;
-            else if (generic == Adjacent)
+            else if (generic == IsAdjacentTo)
                 operatorType = RangeOperatorExpression.OperatorType.IsAdjacentTo;
             else if (generic == Union)
                 operatorType = RangeOperatorExpression.OperatorType.Union;
