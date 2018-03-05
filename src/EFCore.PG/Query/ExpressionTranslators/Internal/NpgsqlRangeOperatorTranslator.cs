@@ -35,35 +35,40 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
     /// <summary>
     /// Translates a range containment method call.
     /// </summary>
-    public class NpgsqlRangeContainmentTranslator : IMethodCallTranslator
+    public class NpgsqlRangeOperatorTranslator : IMethodCallTranslator
     {
         /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeFunctionExtensions.Contains{T}(NpgsqlRange{T}, T)"/>.
+        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Contains{T}(NpgsqlRange{T}, T)"/>.
         /// </summary>
         private static readonly MethodInfo RangeContainsValue;
 
         /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeFunctionExtensions.Contains{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
+        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Contains{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
         private static readonly MethodInfo RangeContainsRange;
 
         /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeFunctionExtensions.ContainedBy{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
+        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.ContainedBy{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
         private static readonly MethodInfo RangeContainedByRange;
 
         /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeFunctionExtensions.ContainedBy{T}(T, NpgsqlRange{T})"/>.
+        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.ContainedBy{T}(T, NpgsqlRange{T})"/>.
         /// </summary>
         private static readonly MethodInfo ValueContainedByRange;
 
         /// <summary>
+        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Overlaps{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
+        /// </summary>
+        private static readonly MethodInfo RangeOverlaps;
+
+        /// <summary>
         /// Initializes static resources.
         /// </summary>
-        static NpgsqlRangeContainmentTranslator()
+        static NpgsqlRangeOperatorTranslator()
         {
             MethodInfo[] extensions =
-                typeof(NpgsqlRangeFunctionExtensions)
+                typeof(NpgsqlRangeExtensions)
                     .GetMethods()
                     .Where(x => x.IsGenericMethod)
                     .Select(x => x.GetGenericMethodDefinition())
@@ -71,7 +76,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
                     .ToArray();
 
             RangeContainsValue =
-                extensions.Where(x => x.Name == nameof(NpgsqlRangeFunctionExtensions.Contains))
+                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.Contains))
                           .Single(
                               x =>
                                   x.GetParameters()
@@ -80,7 +85,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
                           .GetGenericMethodDefinition();
 
             RangeContainsRange =
-                extensions.Where(x => x.Name == nameof(NpgsqlRangeFunctionExtensions.Contains))
+                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.Contains))
                           .Single(
                               x =>
                                   x.GetParameters()
@@ -89,7 +94,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
                           .GetGenericMethodDefinition();
 
             ValueContainedByRange =
-                extensions.Where(x => x.Name == nameof(NpgsqlRangeFunctionExtensions.ContainedBy))
+                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.ContainedBy))
                           .Single(
                               x =>
                                   x.GetParameters()
@@ -98,7 +103,16 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
                           .GetGenericMethodDefinition();
 
             RangeContainedByRange =
-                extensions.Where(x => x.Name == nameof(NpgsqlRangeFunctionExtensions.ContainedBy))
+                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.ContainedBy))
+                          .Single(
+                              x =>
+                                  x.GetParameters()
+                                   .Select(y => y.ParameterType)
+                                   .SequenceEqual(new Type[] { typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>) }))
+                          .GetGenericMethodDefinition();
+
+            RangeOverlaps =
+                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.Overlaps))
                           .Single(
                               x =>
                                   x.GetParameters()
@@ -119,12 +133,17 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
 
             if (generic == RangeContainsValue || generic == RangeContainsRange)
             {
-                return new RangeContainsExpression(methodCallExpression.Arguments[0], methodCallExpression.Arguments[1]);
+                return new RangeOperatorExpression(methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], RangeOperatorExpression.OperatorType.Contains);
             }
 
             if (generic == ValueContainedByRange || generic == RangeContainedByRange)
             {
-                return new RangeContainsExpression(methodCallExpression.Arguments[1], methodCallExpression.Arguments[0]);
+                return new RangeOperatorExpression(methodCallExpression.Arguments[1], methodCallExpression.Arguments[0], RangeOperatorExpression.OperatorType.ContainedBy);
+            }
+
+            if (generic == RangeOverlaps)
+            {
+                return new RangeOperatorExpression(methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], RangeOperatorExpression.OperatorType.Overlaps);
             }
 
             return null;

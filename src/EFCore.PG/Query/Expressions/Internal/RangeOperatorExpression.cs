@@ -37,7 +37,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
     /// <remarks>
     /// See https://www.postgresql.org/docs/current/static/functions-range.html
     /// </remarks>
-    public class RangeContainsExpression : Expression, IEquatable<RangeContainsExpression>
+    public class RangeOperatorExpression : Expression, IEquatable<RangeOperatorExpression>
     {
         /// <inheritdoc />
         public override ExpressionType NodeType { get; } = ExpressionType.Extension;
@@ -55,8 +55,10 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// </summary>
         public virtual Expression Item { get; }
 
+        public virtual OperatorType Operator { get; }
+
         /// <summary>
-        /// Creates a new instance of <see cref="RangeContainsExpression"/>.
+        /// Creates a new instance of <see cref="RangeOperatorExpression"/>.
         /// </summary>
         /// <param name="range">
         /// The range.
@@ -64,13 +66,17 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// <param name="item">
         /// The item.
         /// </param>
-        public RangeContainsExpression([NotNull] Expression range, [NotNull] Expression item)
+        /// <param name="operatorType">
+        /// The type of range operation.
+        /// </param>
+        public RangeOperatorExpression([NotNull] Expression range, [NotNull] Expression item, OperatorType operatorType)
         {
             Check.NotNull(range, nameof(range));
             Check.NotNull(item, nameof(item));
 
             Range = range;
             Item = item;
+            Operator = operatorType;
         }
 
         /// <inheritdoc />
@@ -92,7 +98,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             return
                 Range == newRange && Item == newItem
                     ? this
-                    : new RangeContainsExpression(newRange, newItem);
+                    : new RangeOperatorExpression(newRange, newItem, Operator);
         }
 
         /// <inheritdoc />
@@ -102,7 +108,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         }
 
         /// <inheritdoc />
-        public bool Equals(RangeContainsExpression other)
+        public bool Equals(RangeOperatorExpression other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -134,7 +140,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
                 return true;
             }
 
-            return GetType() == obj.GetType() && Equals((RangeContainsExpression)obj);
+            return GetType() == obj.GetType() && Equals((RangeOperatorExpression)obj);
         }
 
         /// <inheritdoc />
@@ -148,6 +154,13 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
                 hashCode = (hashCode * 397) ^ (Type?.GetHashCode() ?? 0);
                 return hashCode;
             }
+        }
+
+        public enum OperatorType
+        {
+            ContainedBy,
+            Contains,
+            Overlaps
         }
     }
 }
