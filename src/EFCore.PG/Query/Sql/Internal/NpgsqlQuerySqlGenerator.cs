@@ -107,7 +107,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
         protected override Expression VisitBinary(BinaryExpression expression)
         {
             // We need to intercept some of the standard operators for NpgsqlRange<T>.
-            // This returns a RangeOperatorExpression if both conditions are met:
+            // This returns a NpgsqlRangeOperatorExpression if both conditions are met:
             //   1. Both left and right are NpgsqlRange<T>.
             //   2. The expression node type is one of:
             //     - Equal
@@ -118,7 +118,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
             //     - GreaterThanOrEqual
             //
             // Otherwise, this is null and the method should continue.
-            RangeOperatorExpression rangeOperatorExpression = RangeOperatorExpression.TryVisitBinary(expression);
+            NpgsqlRangeOperatorExpression rangeOperatorExpression = NpgsqlRangeOperatorExpression.TryVisitBinary(expression);
 
             if (rangeOperatorExpression != null)
                 return VisitRangeOperator(rangeOperatorExpression);
@@ -199,7 +199,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
         }
 
         /// <summary>
-        /// Visits a <see cref="RangeOperatorExpression"/> and generates the operator symbols.
+        /// Visits a <see cref="NpgsqlRangeOperatorExpression"/> and generates the operator symbols.
         /// </summary>
         /// <param name="rangeOperatorExpression">
         /// The expression to visit.
@@ -207,7 +207,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
         /// <returns>
         /// The visited expression.
         /// </returns>
-        public Expression VisitRangeOperator(RangeOperatorExpression rangeOperatorExpression)
+        public Expression VisitRangeOperator(NpgsqlRangeOperatorExpression rangeOperatorExpression)
         {
             Visit(rangeOperatorExpression.Left);
             Sql.Append($" {rangeOperatorExpression.OperatorSymbol} ");

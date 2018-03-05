@@ -170,37 +170,37 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
             if (!methodCallExpression.Method.IsGenericMethod)
                 return null;
 
-            RangeOperatorExpression.OperatorType operatorType = RangeOperatorExpression.OperatorType.None;
+            NpgsqlRangeOperatorExpression.OperatorType operatorType = NpgsqlRangeOperatorExpression.OperatorType.None;
 
             MethodInfo generic = methodCallExpression.Method.GetGenericMethodDefinition();
 
             // TODO: is there a reason to use Equals(...) over == ? Check on what the EF Core team does.
             if (generic == ContainsValue || generic == ContainsRange)
-                operatorType = RangeOperatorExpression.OperatorType.Contains;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Contains;
             else if (generic == RangeContainedBy)
-                operatorType = RangeOperatorExpression.OperatorType.ContainedBy;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.ContainedBy;
             else if (generic == Overlaps)
-                operatorType = RangeOperatorExpression.OperatorType.Overlaps;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Overlaps;
             else if (generic == IsStrictlyLeftOf)
-                operatorType = RangeOperatorExpression.OperatorType.StrictlyLeftOf;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.StrictlyLeftOf;
             else if (generic == IsStrictlyRightOf)
-                operatorType = RangeOperatorExpression.OperatorType.StrictlyRightOf;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.StrictlyRightOf;
             else if (generic == DoesNotExtendToTheLeftOf)
-                operatorType = RangeOperatorExpression.OperatorType.DoesNotExtendToTheLeftOf;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.DoesNotExtendToTheLeftOf;
             else if (generic == DoesNotExtendToTheRightOf)
-                operatorType = RangeOperatorExpression.OperatorType.DoesNotExtendToTheRightOf;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.DoesNotExtendToTheRightOf;
             else if (generic == IsAdjacentTo)
-                operatorType = RangeOperatorExpression.OperatorType.IsAdjacentTo;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.IsAdjacentTo;
             else if (generic == Union)
-                operatorType = RangeOperatorExpression.OperatorType.Union;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Union;
             else if (generic == Intersect)
-                operatorType = RangeOperatorExpression.OperatorType.Intersection;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Intersection;
             else if (generic == Except)
-                operatorType = RangeOperatorExpression.OperatorType.Difference;
+                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Difference;
 
             return
-                operatorType != RangeOperatorExpression.OperatorType.None
-                    ? new RangeOperatorExpression(methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], operatorType)
+                operatorType != NpgsqlRangeOperatorExpression.OperatorType.None
+                    ? new NpgsqlRangeOperatorExpression(methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], operatorType)
                     : null;
         }
     }

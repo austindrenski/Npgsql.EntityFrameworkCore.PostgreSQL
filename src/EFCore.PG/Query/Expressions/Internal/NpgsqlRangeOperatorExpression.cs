@@ -38,7 +38,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
     /// <remarks>
     /// See https://www.postgresql.org/docs/current/static/functions-range.html
     /// </remarks>
-    public class RangeOperatorExpression : Expression
+    public class NpgsqlRangeOperatorExpression : Expression
     {
         /// <summary>
         /// The generic type definition for <see cref="NpgsqlRange{T}"/>.
@@ -73,7 +73,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         public virtual string OperatorSymbol => OperatorString(Operator);
 
         /// <summary>
-        /// Creates a new instance of <see cref="RangeOperatorExpression"/>.
+        /// Creates a new instance of <see cref="NpgsqlRangeOperatorExpression"/>.
         /// </summary>
         /// <param name="left">
         /// The item to the left of the operator.
@@ -84,7 +84,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// <param name="operatorType">
         /// The type of range operation.
         /// </param>
-        public RangeOperatorExpression([NotNull] Expression left, [NotNull] Expression right, OperatorType operatorType)
+        public NpgsqlRangeOperatorExpression([NotNull] Expression left, [NotNull] Expression right, OperatorType operatorType)
         {
             Check.NotNull(left, nameof(left));
             Check.NotNull(right, nameof(right));
@@ -113,14 +113,14 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             return
                 Left == newRange && Right == newItem
                     ? this
-                    : new RangeOperatorExpression(newRange, newItem, Operator);
+                    : new NpgsqlRangeOperatorExpression(newRange, newItem, Operator);
         }
 
         /// <summary>
-        /// Returns a <see cref="RangeOperatorExpression"/> if applicable.
+        /// Returns a <see cref="NpgsqlRangeOperatorExpression"/> if applicable.
         /// </summary>
         /// <remarks>
-        /// This returns a RangeOperatorExpression IFF:
+        /// This returns a NpgsqlRangeOperatorExpression IFF:
         ///   1. Both left and right are <see cref="NpgsqlRange{T}"/>
         ///   2. The expression node type is one of:
         ///     - Equal
@@ -134,10 +134,10 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// The binary expression to test.
         /// </param>
         /// <returns>
-        /// A <see cref="RangeOperatorExpression"/> or null.
+        /// A <see cref="NpgsqlRangeOperatorExpression"/> or null.
         /// </returns>
         [CanBeNull]
-        public static RangeOperatorExpression TryVisitBinary([NotNull] BinaryExpression expression)
+        public static NpgsqlRangeOperatorExpression TryVisitBinary([NotNull] BinaryExpression expression)
         {
             Check.NotNull(expression, nameof(expression));
 
@@ -180,7 +180,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
 
             return
                 operatorType != OperatorType.None
-                    ? new RangeOperatorExpression(expression.Left, expression.Right, operatorType)
+                    ? new NpgsqlRangeOperatorExpression(expression.Left, expression.Right, operatorType)
                     : null;
         }
 
@@ -197,7 +197,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             if (ReferenceEquals(this, obj))
                 return true;
 
-            if (!(obj is RangeOperatorExpression other))
+            if (!(obj is NpgsqlRangeOperatorExpression other))
                 return false;
 
             return
