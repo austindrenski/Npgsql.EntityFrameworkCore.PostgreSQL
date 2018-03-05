@@ -38,36 +38,6 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
     public class NpgsqlRangeOperatorTranslator : IMethodCallTranslator
     {
         /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Equal{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        private static readonly MethodInfo Equal;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.NotEqual{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        private static readonly MethodInfo NotEqual;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.LessThan{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        private static readonly MethodInfo LessThan;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.GreaterThan{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        private static readonly MethodInfo GreaterThan;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.LessThanOrEqual{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        private static readonly MethodInfo LessThanOrEqual;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.GreaterThanOrEqual{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        private static readonly MethodInfo GreaterThanOrEqual;
-
-        /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Contains{T}(NpgsqlRange{T}, T)"/>.
         /// </summary>
         private static readonly MethodInfo ContainsValue;
@@ -145,18 +115,6 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
                     .Select(x => x.MakeGenericMethod(typeof(int)))
                     .ToArray();
 
-            Equal = null;
-
-            NotEqual = null;
-
-            LessThan = null;
-
-            GreaterThan = null;
-
-            LessThanOrEqual = null;
-
-            GreaterThanOrEqual = null;
-
             ContainsValue =
                 extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.Contains))
                           .Single(
@@ -227,35 +185,20 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
                 return null;
             }
 
-            MethodInfo generic = methodCallExpression.Method.GetGenericMethodDefinition();
+            if (methodCallExpression.Method.Name == "Equals")
+            {
+                return
+                    new RangeOperatorExpression(
+                        methodCallExpression.Arguments[0],
+                        methodCallExpression.Arguments[1],
+                        RangeOperatorExpression.OperatorType.Equal);
+            }
 
             RangeOperatorExpression.OperatorType operatorType = RangeOperatorExpression.OperatorType.None;
 
-            if (generic == Equal)
-            {
-                operatorType = RangeOperatorExpression.OperatorType.Equal;
-            }
-            else if (generic == NotEqual)
-            {
-                operatorType = RangeOperatorExpression.OperatorType.NotEqual;
-            }
-            else if (generic == LessThan)
-            {
-                operatorType = RangeOperatorExpression.OperatorType.LessThan;
-            }
-            else if (generic == GreaterThan)
-            {
-                operatorType = RangeOperatorExpression.OperatorType.GreaterThan;
-            }
-            else if (generic == LessThanOrEqual)
-            {
-                operatorType = RangeOperatorExpression.OperatorType.LessThanOrEqual;
-            }
-            else if (generic == GreaterThanOrEqual)
-            {
-                operatorType = RangeOperatorExpression.OperatorType.GreaterThanOrEqual;
-            }
-            else if (generic == ContainsValue || generic == ContainsRange)
+            MethodInfo generic = methodCallExpression.Method.GetGenericMethodDefinition();
+
+            if (generic == ContainsValue || generic == ContainsRange)
             {
                 operatorType = RangeOperatorExpression.OperatorType.Contains;
             }

@@ -113,6 +113,26 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
 
         protected override Expression VisitBinary(BinaryExpression expression)
         {
+            // We need to intercept some of the standard operators for NpgsqlRange<T>.
+            // This returns a RangeOperatorExpression if both conditions are met:
+            //   1. Both left and right are NpgsqlRange<T>.
+            //   2. The expression node type is one of:
+            //     - Equal
+            //     - NotEqual
+            //     - LessThan
+            //     - GreaterThan
+            //     - LessThanOrEqual
+            //     - GreaterThanOrEqual
+            //
+            // Otherwise, this is null and the method should continue.
+            RangeOperatorExpression rangeOperatorExpression = RangeOperatorExpression.TryVisitBinary(expression);
+
+            if (rangeOperatorExpression != null)
+            {
+                return VisitRangeOperator(rangeOperatorExpression);
+            }
+
+
             switch (expression.NodeType)
             {
             case ExpressionType.Add:

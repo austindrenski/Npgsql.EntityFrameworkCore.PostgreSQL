@@ -28,6 +28,7 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Query.Sql.Internal;
 using Microsoft.EntityFrameworkCore.Utilities;
+using NpgsqlTypes;
 
 namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
 {
@@ -39,6 +40,11 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
     /// </remarks>
     public class RangeOperatorExpression : Expression
     {
+        /// <summary>
+        /// The generic type definition for <see cref="NpgsqlRange{T}"/>.
+        /// </summary>
+        private static readonly Type NpgsqlRangeType = typeof(NpgsqlRange<>);
+
         /// <inheritdoc />
         public override ExpressionType NodeType { get; } = ExpressionType.Extension;
 
@@ -108,6 +114,78 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
                 Left == newRange && Right == newItem
                     ? this
                     : new RangeOperatorExpression(newRange, newItem, Operator);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="RangeOperatorExpression"/> if applicable.
+        /// </summary>
+        /// <remarks>
+        /// This returns a RangeOperatorExpression IFF:
+        ///   1. Both left and right are <see cref="NpgsqlRange{T}"/>
+        ///   2. The expression node type is one of:
+        ///     - Equal
+        ///     - NotEqual
+        ///     - LessThan
+        ///     - GreaterThan
+        ///     - LessThanOrEqual
+        ///     - GreaterThanOrEqual
+        /// </remarks>
+        /// <param name="expression">
+        /// The binary expression to test.
+        /// </param>
+        /// <returns>
+        /// A <see cref="RangeOperatorExpression"/> or null.
+        /// </returns>
+        [CanBeNull]
+        public static RangeOperatorExpression TryVisitBinary([NotNull] BinaryExpression expression)
+        {
+            Check.NotNull(expression, nameof(expression));
+
+            Type leftType = expression.Left.Type;
+            Type rightType = expression.Right.Type;
+
+            if (!leftType.IsGenericType || !rightType.IsGenericType)
+            {
+                return null;
+            }
+
+            bool leftIsRange = leftType.GetGenericTypeDefinition() == NpgsqlRangeType;
+            bool rightIsRange = rightType.GetGenericTypeDefinition() == NpgsqlRangeType;
+
+            if (!leftIsRange || !rightIsRange)
+            {
+                return null;
+            }
+
+            OperatorType operatorType = OperatorType.None;
+
+            // ReSharper disable once SwitchStatementMissingSomeCases
+            switch (expression.NodeType)
+            {
+            case ExpressionType.Equal:
+                operatorType = OperatorType.Equal;
+                break;
+            case ExpressionType.NotEqual:
+                operatorType = OperatorType.NotEqual;
+                break;
+            case ExpressionType.LessThan:
+                operatorType = OperatorType.LessThan;
+                break;
+            case ExpressionType.GreaterThan:
+                operatorType = OperatorType.GreaterThan;
+                break;
+            case ExpressionType.LessThanOrEqual:
+                operatorType = OperatorType.LessThanOrEqual;
+                break;
+            case ExpressionType.GreaterThanOrEqual:
+                operatorType = OperatorType.GreaterThanOrEqual;
+                break;
+            }
+
+            return
+                operatorType != OperatorType.None
+                    ? new RangeOperatorExpression(expression.Left, expression.Right, operatorType)
+                    : null;
         }
 
         /// <inheritdoc />
