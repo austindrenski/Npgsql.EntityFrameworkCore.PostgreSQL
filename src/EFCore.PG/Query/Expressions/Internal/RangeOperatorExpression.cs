@@ -37,7 +37,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
     /// <remarks>
     /// See https://www.postgresql.org/docs/current/static/functions-range.html
     /// </remarks>
-    public class RangeOperatorExpression : Expression, IEquatable<RangeOperatorExpression>
+    public class RangeOperatorExpression : Expression
     {
         /// <inheritdoc />
         public override ExpressionType NodeType { get; } = ExpressionType.Extension;
@@ -116,27 +116,6 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         }
 
         /// <inheritdoc />
-        public bool Equals(RangeOperatorExpression other)
-        {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return
-                Equals(Left, other.Left) &&
-                Equals(Right, other.Right) &&
-                NodeType == other.NodeType &&
-                Operator == other.Operator &&
-                Type == other.Type;
-        }
-
-        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -149,7 +128,17 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
                 return true;
             }
 
-            return GetType() == obj.GetType() && Equals((RangeOperatorExpression)obj);
+            if (!(obj is RangeOperatorExpression other))
+            {
+                return false;
+            }
+
+            return
+                Equals(Left, other.Left) &&
+                Equals(Right, other.Right) &&
+                NodeType == other.NodeType &&
+                Operator == other.Operator &&
+                Type == other.Type;
         }
 
         /// <inheritdoc />
@@ -173,21 +162,78 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// The PostgreSQL operator symbol.
         /// </returns>
         /// <exception cref="NotSupportedException" />
+        [NotNull]
         private static string OperatorString(OperatorType operatorType)
         {
             switch (operatorType)
             {
-            case OperatorType.ContainedBy:
+            case OperatorType.Equal:
             {
-                return "<@";
+                return "=";
+            }
+            case OperatorType.NotEqual:
+            {
+                return "<>";
+            }
+            case OperatorType.LessThan:
+            {
+                return "<";
+            }
+            case OperatorType.GreaterThan:
+            {
+                return ">";
+            }
+            case OperatorType.LessThanOrEqualTo:
+            {
+                return "<=";
+            }
+            case OperatorType.GreaterThanOrEqualTo:
+            {
+                return ">=";
             }
             case OperatorType.Contains:
             {
                 return "@>";
             }
+            case OperatorType.ContainedBy:
+            {
+                return "<@";
+            }
             case OperatorType.Overlaps:
             {
                 return "&&";
+            }
+            case OperatorType.StrictlyLeftOf:
+            {
+                return "<<";
+            }
+            case OperatorType.StrictlyRightOf:
+            {
+                return ">>";
+            }
+            case OperatorType.DoesNotExtendToTheRightOf:
+            {
+                return "&<";
+            }
+            case OperatorType.DoesNotExtendToTheLeftOf:
+            {
+                return "&>";
+            }
+            case OperatorType.IsAdjacentTo:
+            {
+                return "-|-";
+            }
+            case OperatorType.Union:
+            {
+                return "+";
+            }
+            case OperatorType.Intersection:
+            {
+                return "*";
+            }
+            case OperatorType.Difference:
+            {
+                return "-";
             }
             default:
             {
@@ -202,9 +248,34 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         public enum OperatorType
         {
             /// <summary>
-            /// The &lt;@ operator.
+            /// The = operator.
             /// </summary>
-            ContainedBy,
+            Equal,
+
+            /// <summary>
+            /// The &lt;> operator.
+            /// </summary>
+            NotEqual,
+
+            /// <summary>
+            /// The &lt; operator.
+            /// </summary>
+            LessThan,
+
+            /// <summary>
+            /// The > operator.
+            /// </summary>
+            GreaterThan,
+
+            /// <summary>
+            /// The &lt;= operator.
+            /// </summary>
+            LessThanOrEqualTo,
+
+            /// <summary>
+            /// The >= operator.
+            /// </summary>
+            GreaterThanOrEqualTo,
 
             /// <summary>
             /// The @> operator.
@@ -212,9 +283,54 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             Contains,
 
             /// <summary>
+            /// The &lt;@ operator.
+            /// </summary>
+            ContainedBy,
+
+            /// <summary>
             /// The && operator.
             /// </summary>
-            Overlaps
+            Overlaps,
+
+            /// <summary>
+            /// The &lt;&lt; operator.
+            /// </summary>
+            StrictlyLeftOf,
+
+            /// <summary>
+            /// The >> operator.
+            /// </summary>
+            StrictlyRightOf,
+
+            /// <summary>
+            /// The &amp;&lt; operator.
+            /// </summary>
+            DoesNotExtendToTheRightOf,
+
+            /// <summary>
+            /// The &amp;&gt; operator.
+            /// </summary>
+            DoesNotExtendToTheLeftOf,
+
+            /// <summary>
+            /// The -|- operator.
+            /// </summary>
+            IsAdjacentTo,
+
+            /// <summary>
+            /// The + operator.
+            /// </summary>
+            Union,
+
+            /// <summary>
+            /// The * operator.
+            /// </summary>
+            Intersection,
+
+            /// <summary>
+            /// The - operator.
+            /// </summary>
+            Difference
         }
     }
 }
