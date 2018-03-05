@@ -145,17 +145,13 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             Type rightType = expression.Right.Type;
 
             if (!leftType.IsGenericType || !rightType.IsGenericType)
-            {
                 return null;
-            }
 
             bool leftIsRange = leftType.GetGenericTypeDefinition() == NpgsqlRangeType;
             bool rightIsRange = rightType.GetGenericTypeDefinition() == NpgsqlRangeType;
 
             if (!leftIsRange || !rightIsRange)
-            {
                 return null;
-            }
 
             OperatorType operatorType = OperatorType.None;
 
@@ -190,28 +186,19 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
 
         /// <inheritdoc />
         [NotNull]
-        public override string ToString()
-        {
-            return $"{Left} {OperatorSymbol} {Right}";
-        }
+        public override string ToString() => $"{Left} {OperatorSymbol} {Right}";
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
-            {
                 return false;
-            }
 
             if (ReferenceEquals(this, obj))
-            {
                 return true;
-            }
 
             if (!(obj is RangeOperatorExpression other))
-            {
                 return false;
-            }
 
             return
                 Equals(Left, other.Left) &&
@@ -243,86 +230,48 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// </returns>
         /// <exception cref="NotSupportedException" />
         [NotNull]
-        private static string OperatorString(OperatorType operatorType)
+        static string OperatorString(OperatorType operatorType)
         {
             switch (operatorType)
             {
             case OperatorType.None:
-            {
                 goto default;
-            }
             case OperatorType.Equal:
-            {
                 return "=";
-            }
             case OperatorType.NotEqual:
-            {
                 return "<>";
-            }
             case OperatorType.LessThan:
-            {
                 return "<";
-            }
             case OperatorType.GreaterThan:
-            {
                 return ">";
-            }
             case OperatorType.LessThanOrEqual:
-            {
                 return "<=";
-            }
             case OperatorType.GreaterThanOrEqual:
-            {
                 return ">=";
-            }
             case OperatorType.Contains:
-            {
                 return "@>";
-            }
             case OperatorType.ContainedBy:
-            {
                 return "<@";
-            }
             case OperatorType.Overlaps:
-            {
                 return "&&";
-            }
             case OperatorType.StrictlyLeftOf:
-            {
                 return "<<";
-            }
             case OperatorType.StrictlyRightOf:
-            {
                 return ">>";
-            }
             case OperatorType.DoesNotExtendToTheRightOf:
-            {
                 return "&<";
-            }
             case OperatorType.DoesNotExtendToTheLeftOf:
-            {
                 return "&>";
-            }
             case OperatorType.IsAdjacentTo:
-            {
                 return "-|-";
-            }
             case OperatorType.Union:
-            {
                 return "+";
-            }
             case OperatorType.Intersection:
-            {
                 return "*";
-            }
             case OperatorType.Difference:
-            {
                 return "-";
-            }
             default:
-            {
                 throw new NotSupportedException($"Range operator '{operatorType}' is not supported.");
-            }
             }
         }
 

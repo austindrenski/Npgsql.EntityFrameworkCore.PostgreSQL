@@ -54,14 +54,10 @@ namespace Microsoft.EntityFrameworkCore
         public static bool Contains<T>(this NpgsqlRange<T> range, T value) where T : IComparable<T>
         {
             if (range.IsEmpty)
-            {
                 return false;
-            }
 
             if (range.LowerBoundInfinite && range.UpperBoundInfinite)
-            {
                 return true;
-            }
 
             Comparer<T> comparer = Comparer<T>.Default;
             int compareLower = comparer.Compare(value, range.LowerBound);
@@ -92,14 +88,10 @@ namespace Microsoft.EntityFrameworkCore
         public static bool Contains<T>(this NpgsqlRange<T> range, NpgsqlRange<T> value) where T : IComparable<T>
         {
             if (range.IsEmpty || value.IsEmpty)
-            {
                 return false;
-            }
 
             if (range.LowerBoundInfinite && range.UpperBoundInfinite || value.LowerBoundInfinite && value.UpperBoundInfinite)
-            {
                 return true;
-            }
 
             Comparer<T> comparer = Comparer<T>.Default;
             int compareLower = comparer.Compare(value.LowerBound, range.LowerBound);
@@ -109,27 +101,6 @@ namespace Microsoft.EntityFrameworkCore
             bool testUpper = compareUpper > 0 || compareUpper == 0 && range.UpperBoundIsInclusive;
 
             return testLower || testUpper;
-        }
-
-        /// <summary>
-        /// Determines whether a value is contained by a specified range.
-        /// </summary>
-        /// <param name="range">
-        /// The range in which to locate the value.
-        /// </param>
-        /// <param name="value">
-        /// The value to locate in the range.
-        /// </param>
-        /// <typeparam name="T">
-        /// The type of the elements of <paramref name="range"/>.
-        /// </typeparam>
-        /// <returns>
-        /// <value>true</value> if the range contains the specified value; otherwise, <value>false</value>.
-        /// </returns>
-        [Pure]
-        public static bool ContainedBy<T>(this T value, NpgsqlRange<T> range) where T : IComparable<T>
-        {
-            return range.Contains(value);
         }
 
         /// <summary>
@@ -148,10 +119,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <value>true</value> if the range contains the specified range; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool ContainedBy<T>(this NpgsqlRange<T> value, NpgsqlRange<T> range) where T : IComparable<T>
-        {
-            return range.Contains(value);
-        }
+        public static bool ContainedBy<T>(this NpgsqlRange<T> value, NpgsqlRange<T> range) where T : IComparable<T> => range.Contains(value);
 
         /// <summary>
         /// Determines whether a range overlaps another range.
@@ -172,14 +140,10 @@ namespace Microsoft.EntityFrameworkCore
         public static bool Overlaps<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
         {
             if (a.IsEmpty || b.IsEmpty)
-            {
                 return false;
-            }
 
             if (a.LowerBoundInfinite && a.UpperBoundInfinite || b.LowerBoundInfinite && b.UpperBoundInfinite)
-            {
                 return true;
-            }
 
             Comparer<T> comparer = Comparer<T>.Default;
             int compareLower = comparer.Compare(a.LowerBound, b.LowerBound);
@@ -207,10 +171,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <value>true</value> if the first range is strictly to the left of the second; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool StrictlyLeftOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
-        {
-            throw new NotImplementedException();
-        }
+        public static bool IsStrictlyLeftOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
 
         /// <summary>
         /// Determines whether a range is strictly to the right of another range.
@@ -228,10 +189,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <value>true</value> if the first range is strictly to the right of the second; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool StrictlyRightOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
-        {
-            throw new NotImplementedException();
-        }
+        public static bool IsStrictlyRightOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
 
         /// <summary>
         /// Determines whether a range does not extend to the left of another range.
@@ -249,10 +207,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <value>true</value> if the first range does not extend to the left of the second; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool DoesNotExtendToTheLeftOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
-        {
-            throw new NotImplementedException();
-        }
+        public static bool DoesNotExtendToTheLeftOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
 
         /// <summary>
         /// Determines whether a range does not extend to the right of another range.
@@ -270,10 +225,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <value>true</value> if the first range does not extend to the right of the second; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool DoesNotExtendToTheRightOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
-        {
-            throw new NotImplementedException();
-        }
+        public static bool DoesNotExtendToTheRightOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
 
         /// <summary>
         /// Determines whether a range is adjacent to another range.
@@ -291,10 +243,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <value>true</value> if the ranges are adjacent; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool Adjacent<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
-        {
-            throw new NotImplementedException();
-        }
+        public static bool IsAdjacentTo<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
 
         /// <summary>
         /// Returns the set union, which means unique elements that appear in either of two ranges.
@@ -312,10 +261,7 @@ namespace Microsoft.EntityFrameworkCore
         /// The unique elements that appear in either range.
         /// </returns>
         [Pure]
-        public static NpgsqlRange<T> Union<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
-        {
-            throw new NotImplementedException();
-        }
+        public static NpgsqlRange<T> Union<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
 
         /// <summary>
         /// Returns the set intersection, which means elements that appear in each of two ranges.
@@ -333,10 +279,7 @@ namespace Microsoft.EntityFrameworkCore
         /// The elements that appear in both ranges.
         /// </returns>
         [Pure]
-        public static NpgsqlRange<T> Intersect<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
-        {
-            throw new NotImplementedException();
-        }
+        public static NpgsqlRange<T> Intersect<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
 
         /// <summary>
         /// Returns the set difference, which means the elements of one range that do not appear in a second range.
@@ -354,9 +297,6 @@ namespace Microsoft.EntityFrameworkCore
         /// The elements that appear in the first range, but not the second range.
         /// </returns>
         [Pure]
-        public static NpgsqlRange<T> Except<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
-        {
-            throw new NotImplementedException();
-        }
+        public static NpgsqlRange<T> Except<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
     }
 }

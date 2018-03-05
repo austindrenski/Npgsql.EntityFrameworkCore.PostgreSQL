@@ -128,10 +128,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Sql.Internal
             RangeOperatorExpression rangeOperatorExpression = RangeOperatorExpression.TryVisitBinary(expression);
 
             if (rangeOperatorExpression != null)
-            {
                 return VisitRangeOperator(rangeOperatorExpression);
-            }
-
 
             switch (expression.NodeType)
             {

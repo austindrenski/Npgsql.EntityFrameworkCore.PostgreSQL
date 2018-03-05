@@ -40,67 +40,62 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Contains{T}(NpgsqlRange{T}, T)"/>.
         /// </summary>
-        private static readonly MethodInfo ContainsValue;
+        static readonly MethodInfo ContainsValue;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Contains{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
-        private static readonly MethodInfo ContainsRange;
+        static readonly MethodInfo ContainsRange;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.ContainedBy{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
-        private static readonly MethodInfo RangeContainedBy;
+        static readonly MethodInfo RangeContainedBy;
 
         /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.ContainedBy{T}(T, NpgsqlRange{T})"/>.
+        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.IsStrictlyLeftOf{T}"/>.
         /// </summary>
-        private static readonly MethodInfo ValueContainedBy;
+        static readonly MethodInfo StrictlyLeftOf;
 
         /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.StrictlyLeftOf{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
+        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.IsStrictlyRightOf{T}"/>.
         /// </summary>
-        private static readonly MethodInfo StrictlyLeftOf;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.StrictlyRightOf{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        private static readonly MethodInfo StrictlyRightOf;
+        static readonly MethodInfo StrictlyRightOf;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.DoesNotExtendToTheLeftOf{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
-        private static readonly MethodInfo DoesNotExtendToTheLeftOf;
+        static readonly MethodInfo DoesNotExtendToTheLeftOf;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.DoesNotExtendToTheRightOf{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
-        private static readonly MethodInfo DoesNotExtendToTheRightOf;
+        static readonly MethodInfo DoesNotExtendToTheRightOf;
 
         /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Adjacent{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
+        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.IsAdjacentTo{T}"/>.
         /// </summary>
-        private static readonly MethodInfo Adjacent;
+        static readonly MethodInfo Adjacent;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Overlaps{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
-        private static readonly MethodInfo Overlaps;
+        static readonly MethodInfo Overlaps;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Union{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
-        private static readonly MethodInfo Union;
+        static readonly MethodInfo Union;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Intersect{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
-        private static readonly MethodInfo Intersect;
+        static readonly MethodInfo Intersect;
 
         /// <summary>
         /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Except{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
         /// </summary>
-        private static readonly MethodInfo Except;
+        static readonly MethodInfo Except;
 
         /// <summary>
         /// Initializes static resources.
@@ -131,15 +126,6 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
                                   x.GetParameters()
                                    .Select(y => y.ParameterType)
                                    .SequenceEqual(new Type[] { typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>) }))
-                          .GetGenericMethodDefinition();
-
-            ValueContainedBy =
-                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.ContainedBy))
-                          .Single(
-                              x =>
-                                  x.GetParameters()
-                                   .Select(y => y.ParameterType)
-                                   .SequenceEqual(new Type[] { typeof(int), typeof(NpgsqlRange<int>) }))
                           .GetGenericMethodDefinition();
 
             RangeContainedBy =
@@ -181,67 +167,41 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
         public Expression Translate(MethodCallExpression methodCallExpression)
         {
             if (!methodCallExpression.Method.IsGenericMethod)
-            {
                 return null;
-            }
 
             if (methodCallExpression.Method.Name == "Equals")
-            {
                 return
                     new RangeOperatorExpression(
                         methodCallExpression.Arguments[0],
                         methodCallExpression.Arguments[1],
                         RangeOperatorExpression.OperatorType.Equal);
-            }
 
             RangeOperatorExpression.OperatorType operatorType = RangeOperatorExpression.OperatorType.None;
 
             MethodInfo generic = methodCallExpression.Method.GetGenericMethodDefinition();
 
             if (generic == ContainsValue || generic == ContainsRange)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.Contains;
-            }
-            else if (generic == ValueContainedBy || generic == RangeContainedBy)
-            {
+            else if (generic == RangeContainedBy)
                 operatorType = RangeOperatorExpression.OperatorType.ContainedBy;
-            }
             else if (generic == Overlaps)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.Overlaps;
-            }
             else if (generic == StrictlyLeftOf)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.StrictlyLeftOf;
-            }
             else if (generic == StrictlyRightOf)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.StrictlyRightOf;
-            }
             else if (generic == DoesNotExtendToTheLeftOf)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.DoesNotExtendToTheLeftOf;
-            }
             else if (generic == DoesNotExtendToTheRightOf)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.DoesNotExtendToTheRightOf;
-            }
             else if (generic == Adjacent)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.IsAdjacentTo;
-            }
             else if (generic == Union)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.Union;
-            }
             else if (generic == Intersect)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.Intersection;
-            }
             else if (generic == Except)
-            {
                 operatorType = RangeOperatorExpression.OperatorType.Difference;
-            }
 
             return
                 operatorType != RangeOperatorExpression.OperatorType.None
