@@ -63,6 +63,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// <summary>
         /// The operator symbol.
         /// </summary>
+        [NotNull]
         public virtual string OperatorSymbol => OperatorString(Operator);
 
         /// <summary>
@@ -110,6 +111,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         }
 
         /// <inheritdoc />
+        [NotNull]
         public override string ToString()
         {
             return $"{Left} {OperatorSymbol} {Right}";
@@ -167,6 +169,10 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         {
             switch (operatorType)
             {
+            case OperatorType.None:
+            {
+                goto default;
+            }
             case OperatorType.Equal:
             {
                 return "=";
@@ -183,11 +189,11 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             {
                 return ">";
             }
-            case OperatorType.LessThanOrEqualTo:
+            case OperatorType.LessThanOrEqual:
             {
                 return "<=";
             }
-            case OperatorType.GreaterThanOrEqualTo:
+            case OperatorType.GreaterThanOrEqual:
             {
                 return ">=";
             }
@@ -248,6 +254,11 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         public enum OperatorType
         {
             /// <summary>
+            /// No operator specified.
+            /// </summary>
+            None,
+
+            /// <summary>
             /// The = operator.
             /// </summary>
             Equal,
@@ -270,12 +281,12 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             /// <summary>
             /// The &lt;= operator.
             /// </summary>
-            LessThanOrEqualTo,
+            LessThanOrEqual,
 
             /// <summary>
             /// The >= operator.
             /// </summary>
-            GreaterThanOrEqualTo,
+            GreaterThanOrEqual,
 
             /// <summary>
             /// The @> operator.

@@ -36,6 +36,132 @@ namespace Microsoft.EntityFrameworkCore
     public static class NpgsqlRangeExtensions
     {
         /// <summary>
+        /// Determines whether two ranges are equal.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the ranges are equal; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool Equal<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Determines whether two ranges are not equal.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the ranges are not equal; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool NotEqual<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            return !Equal(a, b);
+        }
+
+        /// <summary>
+        /// Determines whether one range is less than the other.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the first range is less than the second; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool LessThan<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Determines whether one range is greater than the other.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the first range is greater than the second; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool GreaterThan<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Determines whether one range is less than or equal to the other.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the first range is less than or equal to the second; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool LessThanOrEqual<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Determines whether one range is greater than or eqaul the other.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the first range is greater than or equal to the second; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool GreaterThanOrEqual<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Determines whether a range contains a specified value.
         /// </summary>
         /// <param name="range">
@@ -189,6 +315,174 @@ namespace Microsoft.EntityFrameworkCore
             bool testUpper = compareUpper > 0 || compareUpper == 0 && b.UpperBoundIsInclusive;
 
             return testLower || testUpper;
+        }
+
+        /// <summary>
+        /// Determines whether a range is strictly to the left of another range.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the first range is strictly to the left of the second; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool StrictlyLeftOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Determines whether a range is strictly to the right of another range.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the first range is strictly to the right of the second; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool StrictlyRightOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Determines whether a range does not extend to the left of another range.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the first range does not extend to the left of the second; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool DoesNotExtendToTheLeftOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Determines whether a range does not extend to the right of another range.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the first range does not extend to the right of the second; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool DoesNotExtendToTheRightOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Determines whether a range is adjacent to another range.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// <value>true</value> if the ranges are adjacent; otherwise, <value>false</value>.
+        /// </returns>
+        [Pure]
+        public static bool Adjacent<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Returns the set union, which means unique elements that appear in either of two ranges.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// The unique elements that appear in either range.
+        /// </returns>
+        [Pure]
+        public static NpgsqlRange<T> Union<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Returns the set intersection, which means elements that appear in each of two ranges.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// The elements that appear in both ranges.
+        /// </returns>
+        [Pure]
+        public static NpgsqlRange<T> Intersect<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Returns the set difference, which means the elements of one range that do not appear in a second range.
+        /// </summary>
+        /// <param name="a">
+        /// The first range.
+        /// </param>
+        /// <param name="b">
+        /// The second range.
+        /// </param>
+        /// <typeparam name="T">
+        /// The type of the elements of <paramref name="a"/>.
+        /// </typeparam>
+        /// <returns>
+        /// The elements that appear in the first range, but not the second range.
+        /// </returns>
+        [Pure]
+        public static NpgsqlRange<T> Except<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
+        {
+            throw new NotImplementedException();
         }
     }
 }
