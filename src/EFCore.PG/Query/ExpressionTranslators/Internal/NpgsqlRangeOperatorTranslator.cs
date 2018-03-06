@@ -24,184 +24,71 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore.Query.Expressions.Internal;
 using System.Linq.Expressions;
 using System.Reflection;
 using NpgsqlTypes;
+using static Microsoft.EntityFrameworkCore.Query.Expressions.Internal.NpgsqlRangeOperatorExpression;
 
 namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
 {
     /// <summary>
-    /// Translates a range containment method call.
+    /// Translates a range operator method call.
     /// </summary>
     public class NpgsqlRangeOperatorTranslator : IMethodCallTranslator
     {
         /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Contains{T}(NpgsqlRange{T}, T)"/>.
+        /// Maps the generic definitions of the methods supported by this translator to the appropriate PostgreSQL operator.
         /// </summary>
-        static readonly MethodInfo ContainsValue;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Contains{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        static readonly MethodInfo ContainsRange;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.ContainedBy{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        static readonly MethodInfo RangeContainedBy;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.IsStrictlyLeftOf{T}"/>.
-        /// </summary>
-        static readonly MethodInfo IsStrictlyLeftOf;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.IsStrictlyRightOf{T}"/>.
-        /// </summary>
-        static readonly MethodInfo IsStrictlyRightOf;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.DoesNotExtendToTheLeftOf{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        static readonly MethodInfo DoesNotExtendToTheLeftOf;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.DoesNotExtendToTheRightOf{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        static readonly MethodInfo DoesNotExtendToTheRightOf;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.IsAdjacentTo{T}"/>.
-        /// </summary>
-        static readonly MethodInfo IsAdjacentTo;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Overlaps{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        static readonly MethodInfo Overlaps;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Union{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        static readonly MethodInfo Union;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Intersect{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        static readonly MethodInfo Intersect;
-
-        /// <summary>
-        /// Caches runtime method information for <see cref="NpgsqlRangeExtensions.Except{T}(NpgsqlRange{T}, NpgsqlRange{T})"/>.
-        /// </summary>
-        static readonly MethodInfo Except;
-
-        /// <summary>
-        /// Initializes static resources.
-        /// </summary>
-        static NpgsqlRangeOperatorTranslator()
-        {
-            // TODO: this is over-complicated -- give it another look
-            MethodInfo[] extensions =
-                typeof(NpgsqlRangeExtensions)
-                    .GetMethods()
-                    .Where(x => x.IsGenericMethod)
-                    .Select(x => x.GetGenericMethodDefinition())
-                    .Select(x => x.MakeGenericMethod(typeof(int)))
-                    .ToArray();
-
-            ContainsValue =
-                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.Contains))
-                          .Single(
-                              x =>
-                                  x.GetParameters()
-                                   .Select(y => y.ParameterType)
-                                   .SequenceEqual(new Type[] { typeof(NpgsqlRange<int>), typeof(int) }))
-                          .GetGenericMethodDefinition();
-
-            ContainsRange =
-                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.Contains))
-                          .Single(
-                              x =>
-                                  x.GetParameters()
-                                   .Select(y => y.ParameterType)
-                                   .SequenceEqual(new Type[] { typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>) }))
-                          .GetGenericMethodDefinition();
-
-            RangeContainedBy =
-                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.ContainedBy))
-                          .Single(
-                              x =>
-                                  x.GetParameters()
-                                   .Select(y => y.ParameterType)
-                                   .SequenceEqual(new Type[] { typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>) }))
-                          .GetGenericMethodDefinition();
-
-            Overlaps =
-                extensions.Where(x => x.Name == nameof(NpgsqlRangeExtensions.Overlaps))
-                          .Single(
-                              x =>
-                                  x.GetParameters()
-                                   .Select(y => y.ParameterType)
-                                   .SequenceEqual(new Type[] { typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>) }))
-                          .GetGenericMethodDefinition();
-
-            IsStrictlyLeftOf = null;
-
-            IsStrictlyRightOf = null;
-
-            DoesNotExtendToTheLeftOf = null;
-
-            DoesNotExtendToTheRightOf = null;
-
-            IsAdjacentTo = null;
-
-            Union = null;
-
-            Intersect = null;
-
-            Except = null;
-        }
+        /// <remarks>
+        /// The <see cref="MakeGeneric{T}"/> method returns the generic method definition.
+        /// </remarks>
+        static readonly Dictionary<MethodInfo, OperatorType> SupportedMethodTranslations =
+            new Dictionary<MethodInfo, OperatorType>
+            {
+                // @formatter:off
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.Contains),             typeof(NpgsqlRange<int>), typeof(int)),              OperatorType.Contains },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.Contains),             typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.Contains },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.ContainedBy),          typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.ContainedBy },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.IsStrictlyLeftOf),     typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.IsStrictlyLeftOf },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.IsStrictlyRightOf),    typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.IsStrictlyRightOf },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.DoesNotExtendLeftOf),  typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.DoesNotExtendLeftOf },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.DoesNotExtendRightOf), typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.DoesNotExtendRightOf },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.IsAdjacentTo),         typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.IsAdjacentTo },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.Overlaps),             typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.Overlaps },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.Union),                typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.Union },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.Intersect),            typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.Intersection },
+                { MakeGeneric<int>(nameof(NpgsqlRangeExtensions.Except),               typeof(NpgsqlRange<int>), typeof(NpgsqlRange<int>)), OperatorType.Difference }
+                // @formatter:on
+            };
 
         /// <inheritdoc />
-        public Expression Translate(MethodCallExpression methodCallExpression)
-        {
-            if (!methodCallExpression.Method.IsGenericMethod)
-                return null;
+        public Expression Translate(MethodCallExpression methodCallExpression) =>
+            methodCallExpression.Method.IsGenericMethod &&
+            SupportedMethodTranslations.TryGetValue(methodCallExpression.Method.GetGenericMethodDefinition(), out OperatorType operatorType)
+                ? new NpgsqlRangeOperatorExpression(methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], operatorType)
+                : null;
 
-            NpgsqlRangeOperatorExpression.OperatorType operatorType = NpgsqlRangeOperatorExpression.OperatorType.None;
-
-            MethodInfo generic = methodCallExpression.Method.GetGenericMethodDefinition();
-
-            // TODO: is there a reason to use Equals(...) over == ? Check on what the EF Core team does.
-            if (generic == ContainsValue || generic == ContainsRange)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Contains;
-            else if (generic == RangeContainedBy)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.ContainedBy;
-            else if (generic == Overlaps)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Overlaps;
-            else if (generic == IsStrictlyLeftOf)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.StrictlyLeftOf;
-            else if (generic == IsStrictlyRightOf)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.StrictlyRightOf;
-            else if (generic == DoesNotExtendToTheLeftOf)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.DoesNotExtendToTheLeftOf;
-            else if (generic == DoesNotExtendToTheRightOf)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.DoesNotExtendToTheRightOf;
-            else if (generic == IsAdjacentTo)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.IsAdjacentTo;
-            else if (generic == Union)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Union;
-            else if (generic == Intersect)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Intersection;
-            else if (generic == Except)
-                operatorType = NpgsqlRangeOperatorExpression.OperatorType.Difference;
-
-            return
-                operatorType != NpgsqlRangeOperatorExpression.OperatorType.None
-                    ? new NpgsqlRangeOperatorExpression(methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], operatorType)
-                    : null;
-        }
+        /// <summary>
+        /// Returns the generic method definition for given the name and parameter types.
+        /// </summary>
+        /// <param name="name">
+        /// The name of the method to find in <see cref="NpgsqlRangeExtensions"/>.
+        /// </param>
+        /// <param name="types">
+        /// The parameter types of the method.
+        /// </param>
+        /// <returns>
+        /// The generic method definition.
+        /// </returns>
+        /// <exception cref="InvalidOperationException" />
+        static MethodInfo MakeGeneric<T>(string name, params Type[] types) =>
+            typeof(NpgsqlRangeExtensions).GetRuntimeMethods()
+                                         .Where(x => x.Name == name)
+                                         .Select(x => x.MakeGenericMethod(typeof(T)))
+                                         .Single(x => x.GetParameters().Select(y => y.ParameterType).SequenceEqual(types))
+                                         .GetGenericMethodDefinition();
     }
 }

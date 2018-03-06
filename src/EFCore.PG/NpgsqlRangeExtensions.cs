@@ -208,7 +208,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <value>true</value> if the first range does not extend to the left of the second; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool DoesNotExtendToTheLeftOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
+        public static bool DoesNotExtendLeftOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
 
         /// <summary>
         /// Determines whether a range does not extend to the right of another range.
@@ -226,7 +226,7 @@ namespace Microsoft.EntityFrameworkCore
         /// <value>true</value> if the first range does not extend to the right of the second; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool DoesNotExtendToTheRightOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
+        public static bool DoesNotExtendRightOf<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => throw new NotImplementedException();
 
         /// <summary>
         /// Determines whether a range is adjacent to another range.

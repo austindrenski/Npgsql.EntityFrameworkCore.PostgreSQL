@@ -254,13 +254,13 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
                 return "<@";
             case OperatorType.Overlaps:
                 return "&&";
-            case OperatorType.StrictlyLeftOf:
+            case OperatorType.IsStrictlyLeftOf:
                 return "<<";
-            case OperatorType.StrictlyRightOf:
+            case OperatorType.IsStrictlyRightOf:
                 return ">>";
-            case OperatorType.DoesNotExtendToTheRightOf:
+            case OperatorType.DoesNotExtendRightOf:
                 return "&<";
-            case OperatorType.DoesNotExtendToTheLeftOf:
+            case OperatorType.DoesNotExtendLeftOf:
                 return "&>";
             case OperatorType.IsAdjacentTo:
                 return "-|-";
@@ -333,22 +333,22 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             /// <summary>
             /// The &lt;&lt; operator.
             /// </summary>
-            StrictlyLeftOf,
+            IsStrictlyLeftOf,
 
             /// <summary>
             /// The >> operator.
             /// </summary>
-            StrictlyRightOf,
+            IsStrictlyRightOf,
 
             /// <summary>
             /// The &amp;&lt; operator.
             /// </summary>
-            DoesNotExtendToTheRightOf,
+            DoesNotExtendRightOf,
 
             /// <summary>
             /// The &amp;&gt; operator.
             /// </summary>
-            DoesNotExtendToTheLeftOf,
+            DoesNotExtendLeftOf,
 
             /// <summary>
             /// The -|- operator.
