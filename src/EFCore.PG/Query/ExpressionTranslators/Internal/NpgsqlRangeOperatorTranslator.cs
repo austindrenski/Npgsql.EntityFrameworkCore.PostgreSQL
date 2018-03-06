@@ -29,6 +29,7 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore.Query.Expressions.Internal;
 using System.Linq.Expressions;
 using System.Reflection;
+using JetBrains.Annotations;
 using NpgsqlTypes;
 using static Microsoft.EntityFrameworkCore.Query.Expressions.Internal.NpgsqlRangeOperatorExpression;
 
@@ -40,12 +41,17 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
     public class NpgsqlRangeOperatorTranslator : IMethodCallTranslator
     {
         /// <summary>
+        /// Caches the <see cref="MethodInfo"/> for the methods in <see cref="NpgsqlRangeExtensions"/>.
+        /// </summary>
+        [NotNull] static readonly MethodInfo[] NpgsqlRangeExtensionsMethods = typeof(NpgsqlRangeExtensions).GetRuntimeMethods().ToArray();
+
+        /// <summary>
         /// Maps the generic definitions of the methods supported by this translator to the appropriate PostgreSQL operator.
         /// </summary>
         /// <remarks>
         /// The <see cref="MakeGeneric{T}"/> method returns the generic method definition.
         /// </remarks>
-        static readonly Dictionary<MethodInfo, OperatorType> SupportedMethodTranslations =
+        [NotNull] static readonly Dictionary<MethodInfo, OperatorType> SupportedMethodTranslations =
             new Dictionary<MethodInfo, OperatorType>
             {
                 // @formatter:off
@@ -65,6 +71,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
             };
 
         /// <inheritdoc />
+        [CanBeNull]
         public Expression Translate(MethodCallExpression methodCallExpression) =>
             methodCallExpression.Method.IsGenericMethod &&
             SupportedMethodTranslations.TryGetValue(methodCallExpression.Method.GetGenericMethodDefinition(), out OperatorType operatorType)
@@ -84,11 +91,11 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
         /// The generic method definition.
         /// </returns>
         /// <exception cref="InvalidOperationException" />
-        static MethodInfo MakeGeneric<T>(string name, params Type[] types) =>
-            typeof(NpgsqlRangeExtensions).GetRuntimeMethods()
-                                         .Where(x => x.Name == name)
-                                         .Select(x => x.MakeGenericMethod(typeof(T)))
-                                         .Single(x => x.GetParameters().Select(y => y.ParameterType).SequenceEqual(types))
-                                         .GetGenericMethodDefinition();
+        [NotNull]
+        static MethodInfo MakeGeneric<T>([NotNull] string name, [ItemNotNull] params Type[] types) =>
+            NpgsqlRangeExtensionsMethods.Where(x => x.Name == name)
+                                        .Select(x => x.MakeGenericMethod(typeof(T)))
+                                        .Single(x => x.GetParameters().Select(y => y.ParameterType).SequenceEqual(types))
+                                        .GetGenericMethodDefinition();
     }
 }

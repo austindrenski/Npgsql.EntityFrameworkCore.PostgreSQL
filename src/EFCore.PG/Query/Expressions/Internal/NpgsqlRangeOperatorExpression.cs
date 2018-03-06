@@ -24,6 +24,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Query.Sql.Internal;
@@ -41,9 +42,52 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
     public class NpgsqlRangeOperatorExpression : Expression
     {
         /// <summary>
+        /// Maps the <see cref="ExpressionType"/> to the <see cref="OperatorType"/>.
+        /// </summary>
+        [NotNull] static readonly Dictionary<ExpressionType, OperatorType> ExpressionOperators =
+            new Dictionary<ExpressionType, OperatorType>
+            {
+                // @formatter:off
+                { ExpressionType.Equal,              OperatorType.Equal              },
+                { ExpressionType.NotEqual,           OperatorType.NotEqual           },
+                { ExpressionType.LessThan,           OperatorType.LessThan           },
+                { ExpressionType.GreaterThan,        OperatorType.GreaterThan        },
+                { ExpressionType.LessThanOrEqual,    OperatorType.LessThanOrEqual    },
+                { ExpressionType.GreaterThanOrEqual, OperatorType.GreaterThanOrEqual }
+                // @formatter:on
+            };
+
+        /// <summary>
+        /// Maps the <see cref="OperatorType"/> into a PostgreSQL operator symbol.
+        /// </summary>
+        [NotNull] static readonly Dictionary<OperatorType, string> OperatorSymbols =
+            new Dictionary<OperatorType, string>
+            {
+                // @formatter:off
+                { OperatorType.Equal,                "="   },
+                { OperatorType.NotEqual,             "<>"  },
+                { OperatorType.LessThan,             "<"   },
+                { OperatorType.GreaterThan,          ">"   },
+                { OperatorType.LessThanOrEqual,      "<="  },
+                { OperatorType.GreaterThanOrEqual,   ">="  },
+                { OperatorType.Contains,             "@>"  },
+                { OperatorType.ContainedBy,          "<@"  },
+                { OperatorType.Overlaps,             "&&"  },
+                { OperatorType.IsStrictlyLeftOf,     "<<"  },
+                { OperatorType.IsStrictlyRightOf,    ">>"  },
+                { OperatorType.DoesNotExtendRightOf, "&<"  },
+                { OperatorType.DoesNotExtendLeftOf,  "&>"  },
+                { OperatorType.IsAdjacentTo,         "-|-" },
+                { OperatorType.Union,                "+"   },
+                { OperatorType.Intersection,         "*"   },
+                { OperatorType.Difference,           "-"   }
+                // @formatter:on
+            };
+
+        /// <summary>
         /// The generic type definition for <see cref="NpgsqlRange{T}"/>.
         /// </summary>
-        private static readonly Type NpgsqlRangeType = typeof(NpgsqlRange<>);
+        [NotNull] static readonly Type NpgsqlRangeType = typeof(NpgsqlRange<>);
 
         /// <inheritdoc />
         public override ExpressionType NodeType { get; } = ExpressionType.Extension;
@@ -70,7 +114,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// The operator symbol.
         /// </summary>
         [NotNull]
-        public virtual string OperatorSymbol => OperatorString(Operator);
+        public virtual string OperatorSymbol => OperatorSymbols[Operator];
 
         /// <summary>
         /// Creates a new instance of <see cref="NpgsqlRangeOperatorExpression"/>.
@@ -144,42 +188,17 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
             Type leftType = expression.Left.Type;
             Type rightType = expression.Right.Type;
 
-            if (!leftType.IsGenericType || !rightType.IsGenericType)
+            if (!leftType.IsGenericType)
                 return null;
-
-            bool leftIsRange = leftType.GetGenericTypeDefinition() == NpgsqlRangeType;
-            bool rightIsRange = rightType.GetGenericTypeDefinition() == NpgsqlRangeType;
-
-            if (!leftIsRange || !rightIsRange)
+            if (!rightType.IsGenericType)
                 return null;
-
-            OperatorType operatorType = OperatorType.None;
-
-            // ReSharper disable once SwitchStatementMissingSomeCases
-            switch (expression.NodeType)
-            {
-            case ExpressionType.Equal:
-                operatorType = OperatorType.Equal;
-                break;
-            case ExpressionType.NotEqual:
-                operatorType = OperatorType.NotEqual;
-                break;
-            case ExpressionType.LessThan:
-                operatorType = OperatorType.LessThan;
-                break;
-            case ExpressionType.GreaterThan:
-                operatorType = OperatorType.GreaterThan;
-                break;
-            case ExpressionType.LessThanOrEqual:
-                operatorType = OperatorType.LessThanOrEqual;
-                break;
-            case ExpressionType.GreaterThanOrEqual:
-                operatorType = OperatorType.GreaterThanOrEqual;
-                break;
-            }
+            if (leftType.GetGenericTypeDefinition() != NpgsqlRangeType)
+                return null;
+            if (rightType.GetGenericTypeDefinition() != NpgsqlRangeType)
+                return null;
 
             return
-                operatorType != OperatorType.None
+                ExpressionOperators.TryGetValue(expression.NodeType, out OperatorType operatorType)
                     ? new NpgsqlRangeOperatorExpression(expression.Left, expression.Right, operatorType)
                     : null;
         }
@@ -193,10 +212,8 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         {
             if (ReferenceEquals(null, obj))
                 return false;
-
             if (ReferenceEquals(this, obj))
                 return true;
-
             if (!(obj is NpgsqlRangeOperatorExpression other))
                 return false;
 
@@ -219,59 +236,6 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
                 hashCode = (hashCode * 397) ^ (int)Operator;
                 hashCode = (hashCode * 397) ^ (Type?.GetHashCode() ?? 0);
                 return hashCode;
-            }
-        }
-
-        /// <summary>
-        /// Translates the <see cref="OperatorType"/> into a PostgreSQL operator symbol.
-        /// </summary>
-        /// <returns>
-        /// The PostgreSQL operator symbol.
-        /// </returns>
-        /// <exception cref="NotSupportedException" />
-        [NotNull]
-        static string OperatorString(OperatorType operatorType)
-        {
-            switch (operatorType)
-            {
-            case OperatorType.None:
-                goto default;
-            case OperatorType.Equal:
-                return "=";
-            case OperatorType.NotEqual:
-                return "<>";
-            case OperatorType.LessThan:
-                return "<";
-            case OperatorType.GreaterThan:
-                return ">";
-            case OperatorType.LessThanOrEqual:
-                return "<=";
-            case OperatorType.GreaterThanOrEqual:
-                return ">=";
-            case OperatorType.Contains:
-                return "@>";
-            case OperatorType.ContainedBy:
-                return "<@";
-            case OperatorType.Overlaps:
-                return "&&";
-            case OperatorType.IsStrictlyLeftOf:
-                return "<<";
-            case OperatorType.IsStrictlyRightOf:
-                return ">>";
-            case OperatorType.DoesNotExtendRightOf:
-                return "&<";
-            case OperatorType.DoesNotExtendLeftOf:
-                return "&>";
-            case OperatorType.IsAdjacentTo:
-                return "-|-";
-            case OperatorType.Union:
-                return "+";
-            case OperatorType.Intersection:
-                return "*";
-            case OperatorType.Difference:
-                return "-";
-            default:
-                throw new NotSupportedException($"Range operator '{operatorType}' is not supported.");
             }
         }
 
