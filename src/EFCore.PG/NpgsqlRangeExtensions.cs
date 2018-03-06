@@ -53,8 +53,11 @@ namespace Microsoft.EntityFrameworkCore
         [Pure]
         public static bool Contains<T>(this NpgsqlRange<T> range, T value) where T : IComparable<T>
         {
+            // Empty ranges contain no elements.
             if (range.IsEmpty)
                 return false;
+
+            // The infinite range contains all possible elements.
             if (range.LowerBoundInfinite && range.UpperBoundInfinite)
                 return true;
 
@@ -62,8 +65,17 @@ namespace Microsoft.EntityFrameworkCore
             int compareLower = comparer.Compare(value, range.LowerBound);
             int compareUpper = comparer.Compare(value, range.UpperBound);
 
-            bool lower = range.LowerBoundInfinite || compareLower > 0 || compareLower == 0 && range.LowerBoundIsInclusive;
-            bool upper = range.UpperBoundInfinite || compareUpper < 0 || compareUpper == 0 && range.UpperBoundIsInclusive;
+            // The lower bound is valid given one of the following:
+            //   1. The lower bound of the range is infinite.
+            //   2. The value is strictly greater than the lower bound of the range.
+            //   3. The value is at the lower bound and the lower bound is inclusive.
+            bool lower = range.LowerBoundInfinite || compareLower > 0 || (compareLower == 0 && range.LowerBoundIsInclusive);
+
+            // The upper bound is valid given one of the following:
+            //   1. The upper bound of the range is infinite.
+            //   2. The value is strictly less than the upper bound of the range.
+            //   3. The value is at the upper bound and the upper bound is inclusive.
+            bool upper = range.UpperBoundInfinite || compareUpper < 0 || (compareUpper == 0 && range.UpperBoundIsInclusive);
 
             return lower && upper;
         }
@@ -86,10 +98,32 @@ namespace Microsoft.EntityFrameworkCore
         [Pure]
         public static bool Contains<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
         {
-            if (a.LowerBound.Equals(b.LowerBound) && a.UpperBound.Equals(b.UpperBound) && a.Flags.Equals(b.Flags))
+            // TODO: Postgres handles integral ranges s.t. the following query returns TRUE:
+            //
+            //   SELECT '[1,10)'::int4range @> '(0,5)'::int4range;
+            //
+            // Questions:
+            //   - How to match this behavior?
+            //   - What does this mean for floating point numbers?
+            //   - Special handling for integrals, or generically applied to all?
+
+            // Ranges have containment identity, s.t. A @> A.
+            //   - SELECT '(,)'::int4range @> '(,)'::int4range;
+            //   - SELECT '(0,0)'::int4range @> '(0,0)'::int4range;
+            //   - SELECT '(0,1)'::int4range @> '(0,1)'::int4range;
+            //   - SELECT '[0,1)'::int4range @> '[0,1)'::int4range;
+            if (a.Flags == b.Flags && a.LowerBound.Equals(b.LowerBound) && a.UpperBound.Equals(b.UpperBound))
                 return true;
-            if (a.IsEmpty && b.IsEmpty || b.IsEmpty)
+
+            // All range contain the empty range, including other empty ranges.
+            //   - SELECT '(0,0)'::int4range @> '(0,0)'::int4range;
+            //   - SELECT '(0,1)'::int4range @> '(0,0)'::int4range;
+            if (b.IsEmpty)
                 return true;
+
+            // A contains all possible forms of B, including infinite forms.
+            //   - SELECT '(,)'::int4range @> '(0,0)'::int4range;
+            //   - SELECT '(,)'::int4range @> '(,)'::int4range;
             if (a.LowerBoundInfinite && a.UpperBoundInfinite)
                 return true;
 
@@ -97,8 +131,27 @@ namespace Microsoft.EntityFrameworkCore
             int compareLower = comparer.Compare(b.LowerBound, a.LowerBound);
             int compareUpper = comparer.Compare(b.UpperBound, a.UpperBound);
 
-            bool lower = a.LowerBoundInfinite || !b.LowerBoundInfinite && compareLower > 0 || compareLower == 0 && a.LowerBoundIsInclusive || !b.LowerBoundIsInclusive;
-            bool upper = a.UpperBoundInfinite || !b.UpperBoundInfinite && compareUpper < 0 || compareUpper == 0 && a.UpperBoundIsInclusive || !b.UpperBoundIsInclusive;
+            // The lower bound is valid given one of the following:
+            //   1. The lower bound of A is infinite.
+            //     - SELECT '(,1)'::int4range @> '(0,1)'::int4range;
+            //   2. The lower bound of B is not infinite and the lower bound of B is strictly greater than the lower bound of A.
+            //     - SELECT '(-1,1)'::int4range @> '(0,1)'::int4range;
+            //   3. The lower bounds are equal and either the lower bound of A is inclusive or the lower bound of B is not inclusive.
+            //     - SELECT '[0,1)'::int4range @> '(0,1)'::int4range;
+            //     - SELECT '[0,1)'::int4range @> '[0,1)'::int4range;
+            //     - SELECT '(0,1)'::int4range @> '(0,1)'::int4range;
+            bool lower = a.LowerBoundInfinite || (!b.LowerBoundInfinite && compareLower > 0) || (compareLower == 0 && !b.LowerBoundInfinite && (a.LowerBoundIsInclusive || !b.LowerBoundIsInclusive));
+
+            // The upper bound is valid given one of the following:
+            //   1. The upper bound of A is infinite.
+            //     - SELECT '(0,)'::int4range @> '(0,1)'::int4range;
+            //   2. The upper bound of B is not infinite and the upper bound of B is strictly less than the upper bound of A.
+            //     - SELECT '(-1,1)'::int4range @> '(-1,0)'::int4range;
+            //   3. The upper bounds are equal and either the upper bound of A is inclusive or the upper bound of B is not inclusive.
+            //     - SELECT '(0,1]'::int4range @> '(0,1)'::int4range;
+            //     - SELECT '(0,1]'::int4range @> '(0,1]'::int4range;
+            //     - SELECT '(0,1)'::int4range @> '(0,1)'::int4range;
+            bool upper = a.UpperBoundInfinite || (!b.UpperBoundInfinite && compareUpper < 0) || (compareUpper == 0 && !b.UpperBoundInfinite && (a.UpperBoundIsInclusive || !b.UpperBoundIsInclusive));
 
             return lower && upper;
         }
@@ -106,20 +159,20 @@ namespace Microsoft.EntityFrameworkCore
         /// <summary>
         /// Determines whether a range is contained by a specified range.
         /// </summary>
-        /// <param name="range">
-        /// The range in which to locate the specified range.
-        /// </param>
-        /// <param name="value">
+        /// <param name="a">
         /// The specified range to locate in the range.
         /// </param>
+        /// <param name="b">
+        /// The range in which to locate the specified range.
+        /// </param>
         /// <typeparam name="T">
-        /// The type of the elements of <paramref name="range"/>.
+        /// The type of the elements of <paramref name="a"/>.
         /// </typeparam>
         /// <returns>
         /// <value>true</value> if the range contains the specified range; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool ContainedBy<T>(this NpgsqlRange<T> value, NpgsqlRange<T> range) where T : IComparable<T> => range.Contains(value);
+        public static bool ContainedBy<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T> => b.Contains(a);
 
         /// <summary>
         /// Determines whether a range overlaps another range.
@@ -139,7 +192,7 @@ namespace Microsoft.EntityFrameworkCore
         [Pure]
         public static bool Overlaps<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
         {
-            if (a.LowerBound.Equals(b.LowerBound) && a.UpperBound.Equals(b.UpperBound) && a.Flags.Equals(b.Flags))
+            if (a.Flags == b.Flags && a.LowerBound.Equals(b.LowerBound) && a.UpperBound.Equals(b.UpperBound))
                 return true;
             if (a.IsEmpty || b.IsEmpty)
                 return false;
