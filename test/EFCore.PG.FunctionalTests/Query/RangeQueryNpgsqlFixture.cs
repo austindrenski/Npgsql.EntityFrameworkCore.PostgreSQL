@@ -53,21 +53,43 @@ namespace Microsoft.EntityFrameworkCore.Query
                     new RangeTestEntity
                     {
                         Id = 1,
-                        Range = new NpgsqlRange<int>(-10, 10)
+                        // (0, 10)
+                        Range = new NpgsqlRange<int>(0, false, false, 10, false, false),
                     },
                     new RangeTestEntity
                     {
                         Id = 2,
-                        Range = new NpgsqlRange<int>(-5, 5)
+                        // [0, 10)
+                        Range = new NpgsqlRange<int>(0, true, false, 10, false, false)
                     },
                     new RangeTestEntity
                     {
                         Id = 3,
-                        Range = new NpgsqlRange<int>(0, false, 10, false)
+                        // [0, 10]
+                        Range = new NpgsqlRange<int>(0, true, false, 10, true, false)
                     },
                     new RangeTestEntity
                     {
                         Id = 4,
+                        // [0, ∞)
+                        Range = new NpgsqlRange<int>(0, true, false, 0, false, true)
+                    },
+                    new RangeTestEntity
+                    {
+                        Id = 5,
+                        // (-∞, 10]
+                        Range = new NpgsqlRange<int>(0, false, true, 10, true, false)
+                    },
+                    new RangeTestEntity
+                    {
+                        Id = 6,
+                        // (-∞, ∞)
+                        Range = new NpgsqlRange<int>(0, false, true, 0, false, true)
+                    },
+                    new RangeTestEntity
+                    {
+                        Id = 7,
+                        // (-∞, ∞)
                         Range = new NpgsqlRange<int>(0, false, true, 0, false, true)
                     });
 

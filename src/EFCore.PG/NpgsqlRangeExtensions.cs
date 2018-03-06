@@ -30,7 +30,6 @@ using NpgsqlTypes;
 
 namespace Microsoft.EntityFrameworkCore
 {
-    // TODO: these implementations are buggy. fix.
     /// <summary>
     /// Provides extension methods for <see cref="NpgsqlRange{T}"/> supporting PostgreSQL translation.
     /// </summary>
@@ -56,7 +55,6 @@ namespace Microsoft.EntityFrameworkCore
         {
             if (range.IsEmpty)
                 return false;
-
             if (range.LowerBoundInfinite && range.UpperBoundInfinite)
                 return true;
 
@@ -64,44 +62,45 @@ namespace Microsoft.EntityFrameworkCore
             int compareLower = comparer.Compare(value, range.LowerBound);
             int compareUpper = comparer.Compare(value, range.UpperBound);
 
-            bool testLower = compareLower > 0 || compareLower == 0 && range.LowerBoundIsInclusive;
-            bool testUpper = compareUpper > 0 || compareUpper == 0 && range.UpperBoundIsInclusive;
+            bool lower = range.LowerBoundInfinite || compareLower > 0 || compareLower == 0 && range.LowerBoundIsInclusive;
+            bool upper = range.UpperBoundInfinite || compareUpper < 0 || compareUpper == 0 && range.UpperBoundIsInclusive;
 
-            return testLower || testUpper;
+            return lower && upper;
         }
 
         /// <summary>
         /// Determines whether a range contains a specified range.
         /// </summary>
-        /// <param name="range">
+        /// <param name="a">
         /// The range in which to locate the specified range.
         /// </param>
-        /// <param name="value">
+        /// <param name="b">
         /// The specified range to locate in the range.
         /// </param>
         /// <typeparam name="T">
-        /// The type of the elements of <paramref name="range"/>.
+        /// The type of the elements of <paramref name="a"/>.
         /// </typeparam>
         /// <returns>
         /// <value>true</value> if the range contains the specified range; otherwise, <value>false</value>.
         /// </returns>
         [Pure]
-        public static bool Contains<T>(this NpgsqlRange<T> range, NpgsqlRange<T> value) where T : IComparable<T>
+        public static bool Contains<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
         {
-            if (range.IsEmpty || value.IsEmpty)
-                return false;
-
-            if (range.LowerBoundInfinite && range.UpperBoundInfinite || value.LowerBoundInfinite && value.UpperBoundInfinite)
+            if (a.LowerBound.Equals(b.LowerBound) && a.UpperBound.Equals(b.UpperBound) && a.Flags.Equals(b.Flags))
+                return true;
+            if (a.IsEmpty && b.IsEmpty || b.IsEmpty)
+                return true;
+            if (a.LowerBoundInfinite && a.UpperBoundInfinite)
                 return true;
 
             Comparer<T> comparer = Comparer<T>.Default;
-            int compareLower = comparer.Compare(value.LowerBound, range.LowerBound);
-            int compareUpper = comparer.Compare(value.UpperBound, range.UpperBound);
+            int compareLower = comparer.Compare(b.LowerBound, a.LowerBound);
+            int compareUpper = comparer.Compare(b.UpperBound, a.UpperBound);
 
-            bool testLower = compareLower > 0 || compareLower == 0 && range.LowerBoundIsInclusive;
-            bool testUpper = compareUpper > 0 || compareUpper == 0 && range.UpperBoundIsInclusive;
+            bool lower = a.LowerBoundInfinite || !b.LowerBoundInfinite && compareLower > 0 || compareLower == 0 && a.LowerBoundIsInclusive || !b.LowerBoundIsInclusive;
+            bool upper = a.UpperBoundInfinite || !b.UpperBoundInfinite && compareUpper < 0 || compareUpper == 0 && a.UpperBoundIsInclusive || !b.UpperBoundIsInclusive;
 
-            return testLower || testUpper;
+            return lower && upper;
         }
 
         /// <summary>
@@ -140,20 +139,18 @@ namespace Microsoft.EntityFrameworkCore
         [Pure]
         public static bool Overlaps<T>(this NpgsqlRange<T> a, NpgsqlRange<T> b) where T : IComparable<T>
         {
+            if (a.LowerBound.Equals(b.LowerBound) && a.UpperBound.Equals(b.UpperBound) && a.Flags.Equals(b.Flags))
+                return true;
             if (a.IsEmpty || b.IsEmpty)
                 return false;
-
-            if (a.LowerBoundInfinite && a.UpperBoundInfinite || b.LowerBoundInfinite && b.UpperBoundInfinite)
+            if (a.LowerBoundInfinite && b.LowerBoundInfinite || a.UpperBoundInfinite && b.UpperBoundInfinite)
                 return true;
 
-            Comparer<T> comparer = Comparer<T>.Default;
-            int compareLower = comparer.Compare(a.LowerBound, b.LowerBound);
-            int compareUpper = comparer.Compare(a.UpperBound, b.UpperBound);
-
-            bool testLower = compareLower > 0 || compareLower == 0 && b.LowerBoundIsInclusive;
-            bool testUpper = compareUpper > 0 || compareUpper == 0 && b.UpperBoundIsInclusive;
-
-            return testLower || testUpper;
+            return
+                a.Contains(b.LowerBound) ||
+                a.Contains(b.UpperBound) ||
+                b.Contains(a.LowerBound) ||
+                b.Contains(a.UpperBound);
         }
 
         /// <summary>

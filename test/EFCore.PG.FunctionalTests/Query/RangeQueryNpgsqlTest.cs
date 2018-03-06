@@ -39,8 +39,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Contains(new NpgsqlRange<int>(0, 5)))
                            .ToArray();
 
-                Assert.Equal(3, actual.Length);
                 Assert.Contains("WHERE \"x\".\"Range\" @> '[0,5]'::int4range = TRUE", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Equal(6, actual.Length);
             }
         }
 
@@ -50,6 +50,35 @@ namespace Microsoft.EntityFrameworkCore.Query
         [Fact]
         public void RangeContainsRangeNonSql()
         {
+            // (0, 1)
+            NpgsqlRange<int> a = new NpgsqlRange<int>(0, false, 1, false);
+            // [0, 1)
+            NpgsqlRange<int> b = new NpgsqlRange<int>(0, true, 1, false);
+            // (0, 1]
+            NpgsqlRange<int> c = new NpgsqlRange<int>(0, false, 1, true);
+            // [0, 1]
+            NpgsqlRange<int> d = new NpgsqlRange<int>(0, true, 1, true);
+
+            Assert.True(a.Contains(a));
+            Assert.True(b.Contains(a));
+            Assert.True(c.Contains(a));
+            Assert.True(d.Contains(a));
+
+            Assert.False(a.Contains(b));
+            Assert.True(b.Contains(b));
+            Assert.False(c.Contains(b));
+            Assert.True(d.Contains(b));
+
+            Assert.False(a.Contains(c));
+            Assert.False(b.Contains(c));
+            Assert.True(c.Contains(c));
+            Assert.True(d.Contains(c));
+
+            Assert.False(a.Contains(d));
+            Assert.False(b.Contains(d));
+            Assert.False(c.Contains(d));
+            Assert.True(d.Contains(d));
+
             using (RangeContext context = Fixture.CreateContext())
             {
                 RangeTestEntity[] actual =
@@ -58,7 +87,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Contains(new NpgsqlRange<int>(0, 5)))
                            .ToArray();
 
-                Assert.Equal(3, actual.Length);
+                Assert.Equal(6, actual.Length);
             }
         }
 
@@ -75,8 +104,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Contains(0))
                            .ToArray();
 
-                Assert.Equal(3, actual.Length);
                 Assert.Contains("WHERE \"x\".\"Range\" @> 0", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Equal(6, actual.Length);
             }
         }
 
@@ -94,7 +123,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Contains(0))
                            .ToArray();
 
-                Assert.Equal(3, actual.Length);
+                Assert.Equal(6, actual.Length);
             }
         }
 
@@ -111,8 +140,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => !x.Range.Contains(new NpgsqlRange<int>(0, 5)))
                            .ToArray();
 
-                Assert.Equal(1, actual.Length);
                 Assert.Contains("WHERE NOT (\"x\".\"Range\" @> '[0,5]'::int4range = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Equal(1, actual.Length);
             }
         }
 
@@ -147,8 +176,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => !x.Range.Contains(0))
                            .ToArray();
 
-                Assert.Equal(1, actual.Length);
                 Assert.Contains("WHERE NOT (\"x\".\"Range\" @> 0 = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Equal(1, actual.Length);
             }
         }
 
@@ -183,8 +212,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => new NpgsqlRange<int>(0, 5).ContainedBy(x.Range))
                            .ToArray();
 
-                Assert.Equal(3, actual.Length);
                 Assert.Contains("WHERE '[0,5]'::int4range <@ \"x\".\"Range\" = TRUE", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Equal(6, actual.Length);
             }
         }
 
@@ -202,7 +231,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => new NpgsqlRange<int>(0, 5).ContainedBy(x.Range))
                            .ToArray();
 
-                Assert.Equal(3, actual.Length);
+                Assert.Equal(6, actual.Length);
             }
         }
 
@@ -219,8 +248,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => !new NpgsqlRange<int>(0, 5).ContainedBy(x.Range))
                            .ToArray();
 
-                Assert.Equal(1, actual.Length);
                 Assert.Contains("WHERE NOT ('[0,5]'::int4range <@ \"x\".\"Range\" = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Equal(1, actual.Length);
             }
         }
 
@@ -252,10 +281,10 @@ namespace Microsoft.EntityFrameworkCore.Query
             {
                 RangeTestEntity[] actual =
                     context.RangeTestEntities
-                           .Where(x => x.Range == new NpgsqlRange<int>(-10, 10))
+                           .Where(x => x.Range == new NpgsqlRange<int>(0, 10))
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" = '[-10,10]'::int4range", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE \"x\".\"Range\" = '[0,10]'::int4range", Fixture.TestSqlLoggerFactory.Sql);
                 Assert.Equal(1, actual.Length);
             }
         }
@@ -270,10 +299,10 @@ namespace Microsoft.EntityFrameworkCore.Query
             {
                 RangeTestEntity[] actual =
                     context.RangeTestEntities
-                           .Where(x => x.Range.Equals(new NpgsqlRange<int>(-10, 10)))
+                           .Where(x => x.Range.Equals(new NpgsqlRange<int>(0, 10)))
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" = '[-10,10]'::int4range", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE \"x\".\"Range\" = '[0,10]'::int4range", Fixture.TestSqlLoggerFactory.Sql);
                 Assert.Equal(1, actual.Length);
             }
         }
@@ -289,7 +318,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                 RangeTestEntity[] actual =
                     context.RangeTestEntities
                            .ToArray()
-                           .Where(x => x.Range == new NpgsqlRange<int>(-10, 10))
+                           .Where(x => x.Range == new NpgsqlRange<int>(0, 10))
                            .ToArray();
 
                 Assert.Equal(1, actual.Length);
@@ -307,7 +336,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                 RangeTestEntity[] actual =
                     context.RangeTestEntities
                            .ToArray()
-                           .Where(x => x.Range.Equals(new NpgsqlRange<int>(-10, 10)))
+                           .Where(x => x.Range.Equals(new NpgsqlRange<int>(0, 10)))
                            .ToArray();
 
                 Assert.Equal(1, actual.Length);
@@ -324,11 +353,11 @@ namespace Microsoft.EntityFrameworkCore.Query
             {
                 RangeTestEntity[] actual =
                     context.RangeTestEntities
-                           .Where(x => x.Range != new NpgsqlRange<int>(-10, 10))
+                           .Where(x => x.Range != new NpgsqlRange<int>(0, 10))
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" <> '[-10,10]'::int4range", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(3, actual.Length);
+                Assert.Contains("WHERE \"x\".\"Range\" <> '[0,10]'::int4range", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Equal(7, actual.Length);
             }
         }
 
@@ -342,11 +371,11 @@ namespace Microsoft.EntityFrameworkCore.Query
             {
                 RangeTestEntity[] actual =
                     context.RangeTestEntities
-                           .Where(x => !x.Range.Equals(new NpgsqlRange<int>(-10, 10)))
+                           .Where(x => !x.Range.Equals(new NpgsqlRange<int>(0, 10)))
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" <> '[-10,10]'::int4range", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(3, actual.Length);
+                Assert.Contains("WHERE \"x\".\"Range\" <> '[0,10]'::int4range", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Equal(7, actual.Length);
             }
         }
 
@@ -361,10 +390,10 @@ namespace Microsoft.EntityFrameworkCore.Query
                 RangeTestEntity[] actual =
                     context.RangeTestEntities
                            .ToArray()
-                           .Where(x => x.Range != new NpgsqlRange<int>(-10, 10))
+                           .Where(x => x.Range != new NpgsqlRange<int>(0, 10))
                            .ToArray();
 
-                Assert.Equal(3, actual.Length);
+                Assert.Equal(7, actual.Length);
             }
         }
 
@@ -379,10 +408,10 @@ namespace Microsoft.EntityFrameworkCore.Query
                 RangeTestEntity[] actual =
                     context.RangeTestEntities
                            .ToArray()
-                           .Where(x => !x.Range.Equals(new NpgsqlRange<int>(-10, 10)))
+                           .Where(x => !x.Range.Equals(new NpgsqlRange<int>(0, 10)))
                            .ToArray();
 
-                Assert.Equal(3, actual.Length);
+                Assert.Equal(7, actual.Length);
             }
         }
 
@@ -399,8 +428,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Overlaps(new NpgsqlRange<int>(0, 1)))
                            .ToArray();
 
-                Assert.Equal(4, actual.Length);
                 Assert.Contains("WHERE \"x\".\"Range\" && '[0,1]'::int4range", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Equal(7, actual.Length);
             }
         }
 
@@ -418,7 +447,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Overlaps(new NpgsqlRange<int>(0, 1)))
                            .ToArray();
 
-                Assert.Equal(4, actual.Length);
+                Assert.Equal(7, actual.Length);
             }
         }
     }
