@@ -763,7 +763,8 @@ CREATE TABLE ""NoFacetTypes"" (
     ""inetColumn"" inet,
     ""pointColumn"" point,
     ""lineColumn"" line,
-    ""xidColumn"" xid
+    ""xidColumn"" xid,
+    ""textArrayColumn"" text[]
 )",
                 Enumerable.Empty<string>(),
                 Enumerable.Empty<string>(),
@@ -792,6 +793,7 @@ CREATE TABLE ""NoFacetTypes"" (
                         Assert.Equal("point", columns.Single(c => c.Name == "pointColumn").StoreType);
                         Assert.Equal("line", columns.Single(c => c.Name == "lineColumn").StoreType);
                         Assert.Equal("xid", columns.Single(c => c.Name == "xidColumn").StoreType);
+                        Assert.Equal("text[]", columns.Single(c => c.Name == "textArrayColumn").StoreType);
                     },
                 @"
 DROP TABLE ""NoFacetTypes""");
@@ -1479,22 +1481,7 @@ CREATE TABLE identity (
         }
 
         [Fact]
-        public void PostgresExtensions()
-        {
-            Test(
-                @"CREATE EXTENSION ""uuid-ossp"";",
-                Enumerable.Empty<string>(),
-                Enumerable.Empty<string>(),
-                dbModel =>
-                {
-                    Assert.NotNull(PostgresExtension.FindPostgresExtension(dbModel, "uuid-ossp"));
-                    Assert.Null(PostgresExtension.FindPostgresExtension(dbModel, "pgcrypto"));
-                },
-                @"DROP EXTENSION ""uuid-ossp""");
-        }
-
-        [Fact]
-        public void IndexMethod()
+        public void Index_method()
         {
             Test(
                 @"
@@ -1618,6 +1605,7 @@ CREATE TABLE column_types (
     json json,
     ""character varying"" character varying,
     ""character(1)"" character,
+    ""character(2)"" character(2),
     ""timestamp without time zone"" timestamp,
     ""timestamp with time zone"" timestamptz,
     ""time without time zone"" time,
@@ -1645,8 +1633,8 @@ CREATE TABLE column_types (
                     {
                         Assert.Equal(column.Name, column.StoreType);
                         Assert.Equal(
-                            typeMappingSource.FindMapping(column.StoreType).StoreType,
-                            column.StoreType
+                            column.StoreType,
+                            typeMappingSource.FindMapping(column.StoreType).StoreType
                         );
                     }
                 },
