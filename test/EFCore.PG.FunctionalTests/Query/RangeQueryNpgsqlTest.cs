@@ -68,7 +68,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Contains(range))
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" @> @__range_0 = TRUE", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE x.\"Range\" @> @__range_0 = TRUE", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -86,7 +86,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => !x.Range.Contains(range))
                            .ToArray();
 
-                Assert.Contains("WHERE NOT (\"x\".\"Range\" @> @__range_0 = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE NOT (x.\"Range\" @> @__range_0 = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -104,7 +104,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Contains(value))
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" @> @__value_0", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE x.\"Range\" @> @__value_0", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -122,7 +122,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => !x.Range.Contains(value))
                            .ToArray();
 
-                Assert.Contains("WHERE NOT (\"x\".\"Range\" @> @__value_0 = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE NOT (x.\"Range\" @> @__value_0 = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -140,7 +140,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => range.ContainedBy(x.Range))
                            .ToArray();
 
-                Assert.Contains("WHERE @__range_0 <@ \"x\".\"Range\" = TRUE", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE @__range_0 <@ x.\"Range\" = TRUE", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -158,7 +158,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => !range.ContainedBy(x.Range))
                            .ToArray();
 
-                Assert.Contains("WHERE NOT (@__range_0 <@ \"x\".\"Range\" = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE NOT (@__range_0 <@ x.\"Range\" = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -176,7 +176,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range == range)
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" = @__range_0", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE x.\"Range\" = @__range_0", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -194,7 +194,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Equals(range))
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" = @__range_0", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE x.\"Range\" = @__range_0", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -212,7 +212,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range != range)
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" <> @__range_0", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE x.\"Range\" <> @__range_0", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -230,7 +230,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => !x.Range.Equals(range))
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" <> @__range_0", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE x.\"Range\" <> @__range_0", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
 
@@ -248,7 +248,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                            .Where(x => x.Range.Overlaps(range))
                            .ToArray();
 
-                Assert.Contains("WHERE \"x\".\"Range\" && @__range_0", Fixture.TestSqlLoggerFactory.Sql);
+                Assert.Contains("WHERE x.\"Range\" && @__range_0", Fixture.TestSqlLoggerFactory.Sql);
             }
         }
     }
