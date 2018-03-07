@@ -73,8 +73,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
         /// <inheritdoc />
         [CanBeNull]
         public Expression Translate(MethodCallExpression methodCallExpression) =>
-            methodCallExpression.Method.IsGenericMethod &&
-            SupportedMethodTranslations.TryGetValue(methodCallExpression.Method.GetGenericMethodDefinition(), out OperatorType operatorType)
+            TryGetSupportedTranslation(methodCallExpression.Method, out OperatorType operatorType)
                 ? new NpgsqlRangeOperatorExpression(methodCallExpression.Arguments[0], methodCallExpression.Arguments[1], operatorType)
                 : null;
 
@@ -94,8 +93,24 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.Internal
         [NotNull]
         static MethodInfo MakeGeneric<T>([NotNull] string name, [ItemNotNull] params Type[] types) =>
             NpgsqlRangeExtensionsMethods.Where(x => x.Name == name)
+                                        .Where(x => x.IsGenericMethodDefinition)
                                         .Select(x => x.MakeGenericMethod(typeof(T)))
                                         .Single(x => x.GetParameters().Select(y => y.ParameterType).SequenceEqual(types))
                                         .GetGenericMethodDefinition();
+
+        /// <summary>
+        /// Finds the <see cref="OperatorType"/> of the <see cref="MethodInfo"/> by searching for a generic or non-generic key as necessary.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The <see cref="MethodInfo"/> for lookup.
+        /// </param>
+        /// <param name="operatorType">
+        /// The <see cref="OperatorType"/> if found.
+        /// </param>
+        /// <returns>
+        /// True if the <see cref="MethodInfo"/> was found; otherwise false.
+        /// </returns>
+        static bool TryGetSupportedTranslation([NotNull] MethodInfo methodInfo, out OperatorType operatorType) =>
+            SupportedMethodTranslations.TryGetValue(methodInfo.IsGenericMethod ? methodInfo.GetGenericMethodDefinition() : methodInfo, out operatorType);
     }
 }

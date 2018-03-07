@@ -18,7 +18,7 @@ namespace Microsoft.EntityFrameworkCore.Query
         /// <summary>
         /// Provides theory data for integers.
         /// </summary>
-        public static IEnumerable<object[]> IntegerTheoryData => Enumerable.Range(-5, 10).Select(x => new object[] { x });
+        public static IEnumerable<object[]> IntegerTheoryData => Enumerable.Range(-10, 10).Select(x => new object[] { x });
 
         /// <summary>
         /// Provides theory data for ranges.
@@ -61,22 +61,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(RangeTheoryData))]
         public void ContainsRange(NpgsqlRange<int> range)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => x.Range.Contains(range))
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => x.Range.Contains(range))
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => x.Range.Contains(range))
+                           .ToArray();
 
                 Assert.Contains("WHERE \"x\".\"Range\" @> @__range_0 = TRUE", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -87,22 +79,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(RangeTheoryData))]
         public void DoesNotContainRange(NpgsqlRange<int> range)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => !x.Range.Contains(range))
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => !x.Range.Contains(range))
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => !x.Range.Contains(range))
+                           .ToArray();
 
                 Assert.Contains("WHERE NOT (\"x\".\"Range\" @> @__range_0 = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -113,22 +97,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(IntegerTheoryData))]
         public void ContainsValue(int value)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => x.Range.Contains(value))
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => x.Range.Contains(value))
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => x.Range.Contains(value))
+                           .ToArray();
 
                 Assert.Contains("WHERE \"x\".\"Range\" @> @__value_0", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -139,22 +115,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(IntegerTheoryData))]
         public void DoesNotContainValue(int value)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => !x.Range.Contains(value))
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => !x.Range.Contains(value))
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => !x.Range.Contains(value))
+                           .ToArray();
 
                 Assert.Contains("WHERE NOT (\"x\".\"Range\" @> @__value_0 = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -165,22 +133,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(RangeTheoryData))]
         public void ContainedByRange(NpgsqlRange<int> range)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => range.ContainedBy(x.Range))
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => range.ContainedBy(x.Range))
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => range.ContainedBy(x.Range))
+                           .ToArray();
 
                 Assert.Contains("WHERE @__range_0 <@ \"x\".\"Range\" = TRUE", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -191,22 +151,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(RangeTheoryData))]
         public void NotContainedByRange(NpgsqlRange<int> range)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => !range.ContainedBy(x.Range))
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => !range.ContainedBy(x.Range))
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => !range.ContainedBy(x.Range))
+                           .ToArray();
 
                 Assert.Contains("WHERE NOT (@__range_0 <@ \"x\".\"Range\" = TRUE)", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -217,22 +169,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(RangeTheoryData))]
         public void Equal_0(NpgsqlRange<int> range)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => x.Range == range)
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => x.Range == range)
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => x.Range == range)
+                           .ToArray();
 
                 Assert.Contains("WHERE \"x\".\"Range\" = @__range_0", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -243,22 +187,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(RangeTheoryData))]
         public void Equal_1(NpgsqlRange<int> range)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => x.Range.Equals(range))
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => x.Range.Equals(range))
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => x.Range.Equals(range))
+                           .ToArray();
 
                 Assert.Contains("WHERE \"x\".\"Range\" = @__range_0", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -269,22 +205,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(RangeTheoryData))]
         public void NotEqual_0(NpgsqlRange<int> range)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => x.Range != range)
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => x.Range != range)
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => x.Range != range)
+                           .ToArray();
 
                 Assert.Contains("WHERE \"x\".\"Range\" <> @__range_0", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -295,22 +223,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(RangeTheoryData))]
         public void NotEqual_1(NpgsqlRange<int> range)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => !x.Range.Equals(range))
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => !x.Range.Equals(range))
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => !x.Range.Equals(range))
+                           .ToArray();
 
                 Assert.Contains("WHERE \"x\".\"Range\" <> @__range_0", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
 
@@ -321,22 +241,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(RangeTheoryData))]
         public void Ovelaps(NpgsqlRange<int> range)
         {
-            using (RangeContext context0 = Fixture.CreateContext())
-            using (RangeContext context1 = Fixture.CreateContext())
+            using (RangeContext context = Fixture.CreateContext())
             {
-                RangeTestEntity[] sqlActual =
-                    context0.RangeTestEntities
-                            .Where(x => x.Range.Overlaps(range))
-                            .ToArray();
-
-                RangeTestEntity[] clientActual =
-                    context1.RangeTestEntities
-                            .ToArray()
-                            .Where(x => x.Range.Overlaps(range))
-                            .ToArray();
+                RangeTestEntity[] _ =
+                    context.RangeTestEntities
+                           .Where(x => x.Range.Overlaps(range))
+                           .ToArray();
 
                 Assert.Contains("WHERE \"x\".\"Range\" && @__range_0", Fixture.TestSqlLoggerFactory.Sql);
-                Assert.Equal(sqlActual.Length, clientActual.Length);
             }
         }
     }
