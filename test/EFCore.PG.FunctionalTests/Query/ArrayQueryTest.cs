@@ -239,6 +239,49 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query
 
         #endregion
 
+        #region StartsWithAny
+
+        [Fact]
+        public void Array_starts_with_any_when_match_expression_is_column()
+        {
+            using (var ctx = CreateContext())
+            {
+                var patterns = new[] { "o", "t", "a", "b", "c" };
+
+                var anon =
+                    ctx.SomeEntities
+                       .Select(x => new { Text = x.SomeText });
+
+                // ReSharper disable once ConvertClosureToMethodGroup
+                var test = anon.Where(x => patterns.Any(p => x.Text.StartsWith(p))).ToList();
+
+                Assert.Equal(3, test.Count);
+                AssertContainsInSql("x.\"SomeText\" LIKE ANY (@__patterns_0) = TRUE");
+            }
+        }
+
+
+        [Fact]
+        public void Array_starts_with_all_when_match_expression_is_column()
+        {
+            using (var ctx = CreateContext())
+            {
+                var patterns = new[] { "o", "t", "a", "b", "c" };
+
+                var anon =
+                    ctx.SomeEntities
+                       .Select(x => new { Text = x.SomeText });
+
+                // ReSharper disable once ConvertClosureToMethodGroup
+                var test = anon.Where(x => patterns.All(p => x.Text.StartsWith(p))).ToList();
+
+                Assert.Equal(0, test.Count);
+                AssertContainsInSql("x.\"SomeText\" LIKE ALL (@__patterns_0) = TRUE");
+            }
+        }
+
+        #endregion
+
         #endregion
 
         #region Support
@@ -273,8 +316,6 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query
             public int[,] SomeMatrix { get; set; }
             public List<int> SomeList { get; set; }
             public byte[] SomeBytea { get; set; }
-
-            // ReSharper disable once UnusedMember.Global
             public string SomeText { get; set; }
         }
 
@@ -304,7 +345,8 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query
                         SomeArray = new[] { 3, 4 },
                         SomeBytea = new byte[] { 3, 4 },
                         SomeMatrix = new[,] { { 5, 6 }, { 7, 8 } },
-                        SomeList = new List<int> { 3, 4 }
+                        SomeList = new List<int> { 3, 4 },
+                        SomeText = "one"
                     });
                     ctx.SomeEntities.Add(new SomeArrayEntity
                     {
@@ -312,7 +354,17 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query
                         SomeArray = new[] { 5, 6, 7 },
                         SomeBytea = new byte[] { 5, 6, 7 },
                         SomeMatrix = new[,] { { 10, 11 }, { 12, 13 } },
-                        SomeList = new List<int> { 3, 4 }
+                        SomeList = new List<int> { 3, 4 },
+                        SomeText = "two"
+                    });
+                    ctx.SomeEntities.Add(new SomeArrayEntity
+                    {
+                        Id = 3,
+                        SomeArray = new[] { 8, 9, 10 },
+                        SomeBytea = new byte[] { 8, 9, 10 },
+                        SomeMatrix = new[,] { { 11, 12 }, { 13, 14 } },
+                        SomeList = new List<int> { 8, 9 },
+                        SomeText = "three"
                     });
                     ctx.SaveChanges();
                 }
