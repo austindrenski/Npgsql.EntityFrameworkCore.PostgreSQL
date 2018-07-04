@@ -152,11 +152,11 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionVisitors
         }
 
         /// <summary>
-        /// Visits a <see cref="SubQueryExpression"/> and attempts to translate a LIKE/ILIKE ANY/ALL expression.
+        /// Visits a <see cref="SubQueryExpression"/> and attempts to translate a {LIKE,ILIKE} {ANY,ALL} expression.
         /// </summary>
         /// <param name="expression">The expression to visit.</param>
         /// <returns>
-        /// A 'LIKE ANY', 'LIKE ALL', 'ILIKE ANY', or 'ILIKE ALL' expression or null.
+        /// A {LIKE,ILIKE} {ANY,ALL} expression or null.
         /// </returns>
         [CanBeNull]
         protected virtual Expression VisitLikeAnyAll([NotNull] SubQueryExpression expression)
