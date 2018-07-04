@@ -182,7 +182,7 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query
 
         #endregion
 
-        #region AnyAll
+        #region LikeAnyAll
 
         [Fact]
         public void Array_like_any_when_match_expression_is_column()
@@ -193,17 +193,28 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query
 
                 var anon =
                     ctx.SomeEntities
-                       .Select(
-                           x => new
-                           {
-                               Array = x.SomeArray,
-                               List = x.SomeList,
-                               Text = x.SomeText
-                           });
+                       .Select(x => new { Text = x.SomeText });
 
                 var _ = anon.Where(x => patterns.Any(p => EF.Functions.Like(x.Text, p))).ToList();
 
                 AssertContainsInSql("x.\"SomeText\" LIKE ANY (@__patterns_0) = TRUE");
+            }
+        }
+
+        [Fact]
+        public void Array_like_all_when_match_expression_is_column()
+        {
+            using (var ctx = CreateContext())
+            {
+                var patterns = new[] { "a", "b", "c" };
+
+                var anon =
+                    ctx.SomeEntities
+                       .Select(x => new { Text = x.SomeText });
+
+                var _ = anon.Where(x => patterns.All(p => EF.Functions.Like(x.Text, p))).ToList();
+
+                AssertContainsInSql("x.\"SomeText\" LIKE ALL (@__patterns_0) = TRUE");
             }
         }
 
@@ -216,13 +227,7 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query
 
                 var anon =
                     ctx.SomeEntities
-                       .Select(
-                           x => new
-                           {
-                               Array = x.SomeArray,
-                               List = x.SomeList,
-                               Text = x.SomeText
-                           });
+                       .Select(x => new { Text = x.SomeText });
 
                 var _ = anon.Where(x => matches.Any(m => EF.Functions.Like(m, x.Text))).ToList();
 
