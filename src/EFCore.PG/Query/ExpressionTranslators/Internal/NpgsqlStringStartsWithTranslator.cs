@@ -23,6 +23,8 @@
 
 #endregion
 
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -31,6 +33,9 @@ using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Query.Expressions;
 using Microsoft.EntityFrameworkCore.Query.ExpressionTranslators;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Query.Expressions.Internal;
+using Remotion.Linq;
+using Remotion.Linq.Clauses;
+using Remotion.Linq.Clauses.Expressions;
 
 namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionTranslators.Internal
 {
@@ -67,15 +72,11 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionTranslators.Inte
             if (!(e.Arguments[0] is Expression pattern))
                 return null;
 
-            if (pattern is ConstantExpression constant && constant.Value is string constantPattern)
-            {
-                // The pattern is constant. Escape all special characters (%, _, \) in C# and send
-                // a simple LIKE
-                return
-                    new LikeExpression(
-                        match,
-                        Expression.Constant(Regex.Replace(constantPattern, @"([%_\\])", @"\$1") + '%'));
-            }
+            if (!(Escape(pattern) is Expression escaped))
+                return null;
+
+            if (escaped is ConstantExpression)
+                return new LikeExpression(match, escaped);
 
             // The pattern isn't a constant (i.e. parameter, database column...).
             // First run LIKE against the *unescaped* pattern (which will efficiently use indices),
@@ -98,10 +99,62 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionTranslators.Inte
 
             return
                 Expression.AndAlso(
-                    new LikeExpression(
-                        match,
-                        Expression.Add(pattern, Expression.Constant("%"), Concat)),
+                    new LikeExpression(match, escaped),
                     Expression.Equal(leftExpr, pattern));
+        }
+
+        /// <summary>
+        /// Escapes the pattern if it is a <see cref="ConstantExpression"/>. Otherwise, returns null.
+        /// </summary>
+        /// <param name="pattern">The pattern expression.</param>
+        /// <returns>
+        /// The escaped pattern if constant; otherwise, null.
+        /// </returns>
+        /// <remarks>
+        /// If the pattern is constant, escape all special characters (%, _, \).
+        /// </remarks>
+        [CanBeNull]
+        public static Expression Escape([CanBeNull] Expression pattern)
+        {
+            switch (pattern)
+            {
+            case ConstantExpression c when c.Value is string literal:
+                return Expression.Constant(Regex.Replace(literal, @"([%_\\])", @"\$1") + '%');
+
+            case ConstantExpression c when c.Value is string[] array:
+                return Expression.Constant(array.Select(x => Regex.Replace(x, @"([%_\\])", @"\$1") + '%').ToArray());
+
+            case ConstantExpression c when c.Value is List<string> list:
+                return Expression.Constant(list.Select(x => Regex.Replace(x, @"([%_\\])", @"\$1") + '%').ToArray());
+
+            case Expression e when e.Type == typeof(string):
+                return Expression.Add(e, Expression.Constant("%"), Concat);
+
+            case Expression e when e.Type == typeof(string[]) || e.Type == typeof(List<string>):
+            {
+                var from =
+                    new MainFromClause(
+                        "<array_item>",
+                        typeof(string),
+                        new SqlFunctionExpression("unnest", typeof(IQueryable<string>), new[] { e }));
+
+                var select =
+                    new SelectClause(
+                        Expression.Add(
+                            new QuerySourceReferenceExpression(from),
+                            Expression.Constant("%"),
+                            Concat));
+
+                var queryModel = new QueryModel(from, select);
+
+                from.ItemName = queryModel.GetNewName(from.ItemName);
+
+                return new SubQueryExpression(queryModel);
+            }
+
+            default:
+                return null;
+            }
         }
     }
 }

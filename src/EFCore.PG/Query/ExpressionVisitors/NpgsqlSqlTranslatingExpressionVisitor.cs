@@ -33,6 +33,7 @@ using Microsoft.EntityFrameworkCore.Query.Expressions;
 using Microsoft.EntityFrameworkCore.Query.ExpressionVisitors;
 using Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Query.Expressions.Internal;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionTranslators.Internal;
 using Remotion.Linq.Clauses;
 using Remotion.Linq.Clauses.Expressions;
 using Remotion.Linq.Clauses.ResultOperators;
@@ -70,6 +71,12 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionVisitors
         [NotNull] static readonly MethodInfo ILike3MethodInfo =
             typeof(NpgsqlDbFunctionsExtensions)
                 .GetRuntimeMethod(nameof(NpgsqlDbFunctionsExtensions.ILike), new[] { typeof(DbFunctions), typeof(string), typeof(string), typeof(string) });
+
+        /// <summary>
+        /// The static method info for <see cref="string.StartsWith(string)"/>.
+        /// </summary>
+        [NotNull] static readonly MethodInfo StartsWithMethodInfo =
+            typeof(string).GetRuntimeMethod(nameof(string.StartsWith), new[] { typeof(string) });
 
         /// <summary>
         /// The query model visitor.
@@ -197,25 +204,73 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionVisitors
             if (!(Visit(queryModel.MainFromClause.FromExpression) is Expression patterns))
                 return null;
 
-            if (!(Visit(call.Arguments[1]) is Expression match))
-                return null;
-
             switch (call.Method)
             {
-            case MethodInfo m when m == Like2MethodInfo:
+            case MethodInfo m when m == Like2MethodInfo && Visit(call.Arguments[1]) is Expression match:
                 return new ArrayAnyAllExpression(comparisonType, "LIKE", match, patterns);
 
-            case MethodInfo m when m == Like3MethodInfo:
+            case MethodInfo m when m == Like3MethodInfo && Visit(call.Arguments[1]) is Expression match:
                 return new ArrayAnyAllExpression(comparisonType, "LIKE", match, patterns);
 
-            case MethodInfo m when m == ILike2MethodInfo:
+            case MethodInfo m when m == ILike2MethodInfo && Visit(call.Arguments[1]) is Expression match:
                 return new ArrayAnyAllExpression(comparisonType, "ILIKE", match, patterns);
 
-            case MethodInfo m when m == ILike3MethodInfo:
+            case MethodInfo m when m == ILike3MethodInfo && Visit(call.Arguments[1]) is Expression match:
                 return new ArrayAnyAllExpression(comparisonType, "ILIKE", match, patterns);
+
+            case MethodInfo m
+                when m == StartsWithMethodInfo &&
+                     Visit(call.Object) is Expression match &&
+                     NpgsqlStringStartsWithTranslator.Escape(patterns) is Expression escapedPatterns:
+                return new ArrayAnyAllExpression(comparisonType, "LIKE", match, escapedPatterns);
 
             default:
                 return null;
+            }
+        }
+
+        /// <inheritdoc />
+        [CanBeNull]
+        protected override Expression VisitExtension(Expression expression)
+        {
+            switch (expression)
+            {
+            case SqlFunctionExpression e:
+                return
+                    new SqlFunctionExpression(
+                        e.FunctionName,
+                        e.Type,
+                        e.Schema,
+                        e.Arguments.Select(x => Visit(x) ?? x));
+
+            case PgFunctionExpression e:
+                return
+                    new PgFunctionExpression(
+                        e.Instance,
+                        e.FunctionName,
+                        e.Schema,
+                        e.Type,
+                        e.PositionalArguments.Select(x => Visit(x) ?? x),
+                        e.NamedArguments.ToDictionary(x => x.Key, x => Visit(x.Value) ?? x.Value));
+
+            case CustomBinaryExpression e:
+                return
+                    new CustomBinaryExpression(
+                        Visit(e.Left) ?? e.Left,
+                        Visit(e.Right) ?? e.Right,
+                        e.Operator,
+                        e.Type);
+
+            case CustomUnaryExpression e:
+                return
+                    new CustomUnaryExpression(
+                        Visit(e.Operand) ?? e.Operand,
+                        e.Operator,
+                        e.Type,
+                        e.Postfix);
+
+            default:
+                return base.VisitExtension(expression);
             }
         }
     }
