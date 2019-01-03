@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.Internal;
 using Xunit;
 
+// ReSharper disable StringLiteralTypo
 namespace Npgsql.EntityFrameworkCore.PostgreSQL.Metadata
 {
     public class NpgsqlInternalMetadataBuilderExtensionsTest
@@ -52,8 +53,8 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Metadata
         public void Can_access_property()
         {
             var propertyBuilder = CreateBuilder()
-                .Entity(typeof(Splot), ConfigurationSource.Convention)
-                .Property("Id", typeof(int), ConfigurationSource.Convention);
+                                  .Entity(typeof(Splot), ConfigurationSource.Convention)
+                                  .Property("Id", typeof(int), ConfigurationSource.Convention);
 
             Assert.True(propertyBuilder.Npgsql(ConfigurationSource.Convention).HiLoSequenceName("Splew"));
             Assert.Equal("Splew", propertyBuilder.Metadata.Npgsql().HiLoSequenceName);
@@ -89,6 +90,7 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Metadata
                 a => a.Name.StartsWith(RelationalAnnotationNames.Prefix, StringComparison.Ordinal)));
         }
 
+        // ReSharper disable once IdentifierTypo
         class Splot {}
     }
 }

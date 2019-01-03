@@ -11,12 +11,10 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query
 {
     public class UdfDbFunctionNpgsqlTests : UdfDbFunctionTestBase<UdfDbFunctionNpgsqlTests.Npgsql>
     {
+        // ReSharper disable once UnusedParameter.Local
         public UdfDbFunctionNpgsqlTests(Npgsql fixture, ITestOutputHelper testOutputHelper)
             : base(fixture)
-        {
-            fixture.TestSqlLoggerFactory.Clear();
-            //fixture.TestSqlLoggerFactory.SetTestOutputHelper(testOutputHelper);
-        }
+            => fixture.TestSqlLoggerFactory.Clear();
 
         #region Scalar Tests
 
@@ -52,9 +50,7 @@ LIMIT 2");
 
         [Fact]
         public override void Scalar_Function_ClientEval_Method_As_Translateable_Method_Parameter_Static()
-        {
-            base.Scalar_Function_ClientEval_Method_As_Translateable_Method_Parameter_Static();
-        }
+            => base.Scalar_Function_ClientEval_Method_As_Translateable_Method_Parameter_Static();
 
         [Fact]
         public override void Scalar_Function_Constant_Parameter_Static()
@@ -765,6 +761,7 @@ LIMIT 2");
 
         #endregion
 
+        // ReSharper disable once UnusedMember.Global
         protected class UDFNpgsqlContext : UDFSqlContext
         {
             public UDFNpgsqlContext(DbContextOptions options) : base(options) {}
@@ -912,7 +909,7 @@ LIMIT 2");
             }
         }
 
-        public void AssertSql(params string[] expected)
+        void AssertSql(params string[] expected)
             => Fixture.TestSqlLoggerFactory.AssertBaseline(expected);
     }
 }

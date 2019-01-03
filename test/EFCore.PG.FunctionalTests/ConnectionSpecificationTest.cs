@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal;
 using Npgsql.EntityFrameworkCore.PostgreSQL.TestUtilities;
 using Xunit;
+// ReSharper disable StringLiteralTypo
 
 namespace Npgsql.EntityFrameworkCore.PostgreSQL
 {
@@ -81,9 +82,7 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL
             private readonly NpgsqlConnection _connection;
 
             public ConnectionInOnConfiguringContext(NpgsqlConnection connection)
-            {
-                _connection = connection;
-            }
+                => _connection = connection;
 
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                 => optionsBuilder.UseNpgsql(_connection, b => b.ApplyConfiguration());
@@ -95,6 +94,7 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL
             }
         }
 
+        // ReSharper disable once UnusedMember.Local
         private class StringInConfigContext : NorthwindContextBase
         {
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -131,6 +131,7 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL
             }
         }
 
+        // ReSharper disable once ClassNeverInstantiated.Local
         private class NoUseNpgsqlContext : NorthwindContextBase
         {
         }
@@ -230,9 +231,7 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL
 
             public NonGenericOptionsContext(DbContextOptions options)
                 : base(options)
-            {
-                _options = options;
-            }
+                => _options = options;
 
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
             {
@@ -255,22 +254,25 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL
             {
             }
 
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local
             public DbSet<Customer> Customers { get; set; }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
-            {
-                modelBuilder.Entity<Customer>(b =>
+                => modelBuilder.Entity<Customer>(b =>
                 {
-                    b.HasKey(c => c.CustomerID);
+                    b.HasKey(c => c.CustomerId);
                     b.ToTable("Customers");
                 });
-            }
         }
 
+        // ReSharper disable once ClassNeverInstantiated.Local
         private class Customer
         {
-            public string CustomerID { get; set; }
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local
+            public string CustomerId { get; set; }
+            // ReSharper disable once UnusedMember.Local
             public string CompanyName { get; set; }
+            // ReSharper disable once UnusedMember.Local
             public string Fax { get; set; }
         }
 
