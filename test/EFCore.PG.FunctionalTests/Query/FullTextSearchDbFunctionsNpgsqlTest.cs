@@ -871,6 +871,42 @@ LIMIT 1");
         }
 
         [Fact]
+        public void RankCoverDensity_With_Empty_Function()
+        {
+            using (var context = CreateContext())
+            {
+                var _ =
+                    context.Customers
+                           .Select(c => EF.Functions.ToTsVector("a b c").RankCoverDensity(EF.Functions.PlainToTsQuery("")))
+                           .ToList();
+            }
+
+            AssertSql(
+                @"SELECT ts_rank_cd(to_tsvector('a b c'), plainto_tsquery(''))
+FROM ""Customers"" AS c");
+        }
+
+        [Fact]
+        public void RankCoverDensity_With_Empty_Local()
+        {
+            using (var context = CreateContext())
+            {
+                var empty = new NpgsqlTsQueryEmpty();
+
+                var _ =
+                    context.Customers
+                           .Select(c => EF.Functions.ToTsVector("a b c").RankCoverDensity(empty))
+                           .ToList();
+            }
+
+            AssertSql(
+                @"@__empty_1='' (DbType = Object)
+
+SELECT ts_rank_cd(to_tsvector('a b c'), @__empty_1)
+FROM ""Customers"" AS c");
+        }
+
+        [Fact]
         public void RankCoverDensity_With_Normalization()
         {
             using (var context = CreateContext())

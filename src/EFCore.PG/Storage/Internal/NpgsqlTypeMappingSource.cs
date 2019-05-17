@@ -237,6 +237,7 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal
                 { typeof(NpgsqlRange<DateTime>),        _tsrange              },
 
                 { typeof(NpgsqlTsQuery),                _tsquery              },
+                { typeof(NpgsqlTsQueryEmpty),           _tsquery              },
                 { typeof(NpgsqlTsVector),               _tsvector             },
                 { typeof(NpgsqlTsRankingNormalization), _rankingNormalization }
             };
