@@ -17,6 +17,7 @@ namespace Npgsql.EntityFrameworkCore.PostgreSQL.Query
             base.OnModelCreating(modelBuilder, context);
 
             modelBuilder.HasPostgresExtension("uuid-ossp");
+            modelBuilder.HasPostgresExtension("pg_trgm");
 
             modelBuilder.Entity<Customer>()
                 .Property(c => c.CustomerID)
