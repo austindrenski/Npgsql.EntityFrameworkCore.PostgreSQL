@@ -1,0 +1,148 @@
+name: EFCore.PG CI
+
+on: [ push, pull_request ]
+
+jobs:
+  linux:
+    name: Linux
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        dotnet: [ '3.0.100' ]
+        postgresql: [ 10, 11 ]
+
+    services:
+      postgresql:
+        image: npgsql/postgres:${{ matrix.postgresql }}
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ matrix.dotnet }}
+
+    - name: Test (EFCore.PG.Tests)
+      run: dotnet test test/EFCore.PG.Tests --configuration Debug
+      shell: bash
+
+    - name: Test (EFCore.PG.FunctionalTests)
+      run: dotnet test test/EFCore.PG.FunctionalTests --configuration Debug
+      shell: bash
+
+    - name: Test (EFCore.PG.Plugins.FunctionalTests)
+      run: dotnet test test/EFCore.PG.Plugins.FunctionalTests --configuration Debug
+      shell: bash
+
+    - name: Pack NuGet packages (CI versions)
+      if: success()
+      env:
+        GITHUB_SHA: ${{ github.sha }}
+      run: |
+        VERSION_SUFFIX="ci.$(date +%Y%m%d)+sha.${GITHUB_SHA:0:9}"
+        dotnet pack src/EFCore.PG          --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX
+        dotnet pack src/EFCore.PG          --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX --include-symbols
+        dotnet pack src/EFCore.PG.NodaTime --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX
+        dotnet pack src/EFCore.PG.NodaTime --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX --include-symbols
+        dotnet pack src/EFCore.PG.NTS      --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX
+        dotnet pack src/EFCore.PG.NTS      --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX --include-symbols
+      shell: bash
+
+    - name: Publish artifacts
+      if: success()
+      uses: actions/upload-artifact@v1
+      with:
+        name: linux-build
+        path: nupkgs/ci
+
+  windows:
+    name: Windows
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ windows-latest ]
+        dotnet: [ '3.0.100' ]
+        postgresql: [ 10, 11 ]
+
+    # services:
+    #   postgresql:
+    #     image: npgsql/postgres-windows:${{ matrix.postgresql }}
+    #     ports:
+    #       - 5432:5432
+
+    steps:
+    - name: Initialize containers
+      env:
+        IMAGE: npgsql/postgres-windows:${{ matrix.postgresql }}
+      run: docker run --detach --name postgresql -p 5432:5432 $env:IMAGE
+      shell: pwsh
+
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v1.0.2 # Issues with DOTNET_ROOT
+      with:
+        dotnet-version: ${{ matrix.dotnet }}
+
+    - name: Test (EFCore.PG.Tests)
+      env:
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      run: dotnet test test/EFCore.PG.Tests --configuration Debug
+      shell: bash
+
+    - name: Test (EFCore.PG.FunctionalTests)
+      env:
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      run: dotnet test test/EFCore.PG.FunctionalTests --configuration Debug
+      shell: bash
+
+    - name: Test (EFCore.PG.Plugins.FunctionalTests)
+      env:
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      run: dotnet test test/EFCore.PG.Plugins.FunctionalTests --configuration Debug
+      shell: bash
+
+    - name: Pack NuGet packages (CI versions)
+      if: success()
+      env:
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1
+        GITHUB_SHA: ${{ github.sha }}
+      run: |
+        VERSION_SUFFIX="ci.$(date +%Y%m%d)+sha.${GITHUB_SHA:0:9}"
+        dotnet pack src/EFCore.PG          --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX
+        dotnet pack src/EFCore.PG          --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX --include-symbols
+        dotnet pack src/EFCore.PG.NodaTime --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX
+        dotnet pack src/EFCore.PG.NodaTime --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX --include-symbols
+        dotnet pack src/EFCore.PG.NTS      --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX
+        dotnet pack src/EFCore.PG.NTS      --configuration Release --output nupkgs/ci --version-suffix $VERSION_SUFFIX --include-symbols
+      shell: bash
+
+    - name: Pack NuGet packages (Release versions)
+      if: success()
+      env:
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      run: |
+        dotnet pack src/EFCore.PG          --configuration Release --output nupkgs/release
+        dotnet pack src/EFCore.PG          --configuration Release --output nupkgs/release --include-symbols
+        dotnet pack src/EFCore.PG.NodaTime --configuration Release --output nupkgs/release
+        dotnet pack src/EFCore.PG.NodaTime --configuration Release --output nupkgs/release --include-symbols
+        dotnet pack src/EFCore.PG.NTS      --configuration Release --output nupkgs/release
+        dotnet pack src/EFCore.PG.NTS      --configuration Release --output nupkgs/release --include-symbols
+      shell: bash
+
+    - name: Publish artifacts
+      if: success()
+      uses: actions/upload-artifact@v1
+      with:
+        name: windows-build
+        path: nupkgs
