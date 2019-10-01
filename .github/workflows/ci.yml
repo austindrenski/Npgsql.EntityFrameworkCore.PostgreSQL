@@ -1,6 +1,6 @@
 name: EFCore.PG CI
 
-on: [ push, pull_request ]
+on: [ push ]
 
 jobs:
   linux:
@@ -73,18 +73,26 @@ jobs:
         dotnet: [ '3.0.100' ]
         postgresql: [ 10, 11 ]
 
-    # services:
-    #   postgresql:
-    #     image: npgsql/postgres-windows:${{ matrix.postgresql }}
-    #     ports:
-    #       - 5432:5432
-
     steps:
+    - name: Enable experimental features for Docker
+      env:
+        LCOW_URL: 'https://github.com/linuxkit/lcow/releases/download/v4.14.35-v0.3.9/release.zip'
+      run: |
+        # Configure Docker for experimental LCOW support.
+        [Environment]::SetEnvironmentVariable("LCOW_SUPPORTED", "1", "Machine")
+        Set-Content -Path "$env:ProgramData\docker\config\daemon.json" -Value '{ "experimental":true }'
+        Restart-Service docker
+
+        # See: https://github.com/moby/moby/issues/38320
+        Invoke-WebRequest -Uri "$env:LCOW_URL" -OutFile 'lcow.zip'
+        Expand-Archive -Path 'lcow.zip' -DestinationPath 'C:\Program Files\Linux Containers'
+      shell: pwsh
+
     - name: Initialize containers
       env:
-        IMAGE: npgsql/postgres-windows:${{ matrix.postgresql }}
-      run: docker run --detach --name postgresql -p 5432:5432 $env:IMAGE
-      shell: pwsh
+        IMAGE: npgsql/postgres:${{ matrix.postgresql }}
+      run: docker run --detach --name postgresql -p 5432:5432 $IMAGE
+      shell: bash
 
     - name: Checkout
       uses: actions/checkout@v1
