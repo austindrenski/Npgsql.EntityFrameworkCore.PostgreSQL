@@ -11,11 +11,11 @@ psql -c "CREATE DATABASE vsts OWNER vsts;"
 
 : TODO: Something is wrong with the raster setup (missing dep?)
 :       so we need to configure PostGIS manually.
-psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\postgis.sql
-psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\postgis_comments.sql
-psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\spatial_ref_sys.sql
-psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\topology.sql
-psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\topology_comments.sql
+: psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\postgis.sql
+: psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\postgis_comments.sql
+: psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\spatial_ref_sys.sql
+: psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\topology.sql
+: psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\topology_comments.sql
 
 : -- only if you compiled with raster (GDAL)
 : psql -d npgsql_tests -f C:\pgsql\share\contrib\postgis-2.5\rtpostgis.sql

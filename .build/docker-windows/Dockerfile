@@ -3,43 +3,15 @@ FROM mcr.microsoft.com/windows/servercore:1809
 LABEL description="Npgsql CI build image"
 
 ARG PG_VERSION="11"
-ARG EDB_VERSION="11.4-2"
 ARG POSTGIS_VERSION="2.5.3"
 
 ENV PG_VERSION ${PG_VERSION}
-ENV EDB_VERSION ${EDB_VERSION}}
 ENV POSTGIS_VERSION ${POSTGIS_VERSION}
 
-# COPY --from=upstream /pgsql /pgsql
+COPY --from=upstream /pgsql /pgsql
 COPY --from=upstream docker-entrypoint.cmd /
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
-
-RUN Invoke-WebRequest -Uri "https://get.enterprisedb.com/postgresql/postgresql-11.4-2-windows-x64-binaries.zip" -OutFile '/postgresql.zip'; \
-    Expand-Archive '/postgresql.zip' -DestinationPath '/'; \
-    Remove-Item -Path '/postgresql.zip' 
-
-# Make the sample config easier to munge (and "correct by default")
-RUN $SAMPLE_FILE = '/pgsql/share/postgresql.conf.sample'; \
-    $SAMPLE_CONF = Get-Content $SAMPLE_FILE ; \
-    $SAMPLE_CONF = $SAMPLE_CONF -Replace '#listen_addresses = ''localhost''','listen_addresses = ''*'''; \
-    $SAMPLE_CONF | Set-Content $SAMPLE_FILE
-
-# Install correct Visual C++ Redistributable Package
-RUN if (($env:EDB_VER -eq '9.4.22-1') -or ($env:EDB_VER -eq '9.5.17-1') -or ($env:EDB_VER -eq '9.6.13-1') -or ($env:EDB_VER -eq '10.8-1')) { \
-        Write-Host('Visual C++ 2013 Redistributable Package') ; \
-        $URL2 = 'https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe' ; \
-    } else { \
-        Write-Host('Visual C++ 2017 Redistributable Package') ; \
-        $URL2 = 'https://download.visualstudio.microsoft.com/download/pr/11100230/15ccb3f02745c7b206ad10373cbca89b/VC_redist.x64.exe' ; \
-    } ; \
-    Invoke-WebRequest -Uri $URL2 -OutFile 'C:\\vcredist.exe' ; \
-    Start-Process 'C:\\vcredist.exe' -Wait \
-        -ArgumentList @( \
-            '/install', \
-            '/passive', \
-            '/norestart' \
-        )
 
 RUN Invoke-WebRequest -Uri "http://download.osgeo.org/postgis/windows/pg${env:PG_VERSION}/postgis-bundle-pg${env:PG_VERSION}-${env:POSTGIS_VERSION}x64.zip" -OutFile "/postgis.zip"; \
     Expand-Archive "/postgis.zip" "/postgis/"; \
